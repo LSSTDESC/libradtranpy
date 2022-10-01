@@ -70,6 +70,8 @@ OBS_Altitude = str(LSST_Altitude)
 
 TOPDIR='simulations/RT/2.0.3/LS'
 
+
+
 def CleanSimDir():   
     os.system("rm -rf simulations")
 
@@ -372,7 +374,16 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         outputFilename=BaseFilename+'.OUT'
         inp=os.path.join(INPUTDIR,inputFilename)
         out=os.path.join(OUTPUTDIR,outputFilename)
-                    
+        
+        # provide a usefull file
+        fname = "IC.DAT"
+        if not os.path.isfile(fname):
+            with open(fname, 'w+') as f:
+                f.write('#      z     LWC    R_eff\n')
+                f.write('#     (km)  (g/m^3) (um) \n')
+                f.write('     11.000   0      0   \n')
+                f.write('     10.000   0.005  20  \n') 
+               
             
         uvspec.write_input(inp)
         uvspec.run(inp,out,verbose,path=libradtranpath)
@@ -633,7 +644,15 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
         outputFilename=BaseFilename+'.OUT'
         inp=os.path.join(INPUTDIR,inputFilename)
         out=os.path.join(OUTPUTDIR,outputFilename)
-                    
+        
+         # provide a usefull file
+        fname = "IC.DAT"
+        if not os.path.isfile(fname):
+            with open(fname, 'w+') as f:
+                f.write('#      z     LWC    R_eff\n')
+                f.write('#     (km)  (g/m^3) (um) \n')
+                f.write('     11.000   0      0   \n')
+                f.write('     10.000   0.005  20  \n')             
             
         uvspec.write_input(inp)
         uvspec.run(inp,out,verbose,path=libradtranpath)
@@ -861,7 +880,14 @@ def ProcessSimulationaer1(airmass_num,pwv_num,oz_num,wl0_num,tau0_num,press_num)
         inp=os.path.join(INPUTDIR,inputFilename)
         out=os.path.join(OUTPUTDIR,outputFilename)
                     
-            
+        fname = "IC.DAT"
+        if not os.path.isfile(fname):
+            with open(fname, 'w+') as f:
+                f.write('#      z     LWC    R_eff\n')
+                f.write('#     (km)  (g/m^3) (um) \n')
+                f.write('     11.000   0      0   \n')
+                f.write('     10.000   0.005  20  \n') 
+        
         uvspec.write_input(inp)
         uvspec.run(inp,out,verbose,path=libradtranpath)
         
@@ -1099,7 +1125,14 @@ def ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num,press_nu
         outputFilename=BaseFilename+'.OUT'
         inp=os.path.join(INPUTDIR,inputFilename)
         out=os.path.join(OUTPUTDIR,outputFilename)
-                    
+        
+        fname = "IC.DAT"
+        if not os.path.isfile(fname):
+            with open(fname, 'w+') as f:
+                f.write('#      z     LWC    R_eff\n')
+                f.write('#     (km)  (g/m^3) (um) \n')
+                f.write('     11.000   0      0   \n')
+                f.write('     10.000   0.005  20  \n')             
             
         uvspec.write_input(inp)
         uvspec.run(inp,out,verbose,path=libradtranpath)
