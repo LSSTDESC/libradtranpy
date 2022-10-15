@@ -5,7 +5,7 @@
 # Here we vary PWV
 # author: sylvielsstfr
 # creation date : November 2nd 2016
-# update : January 2020
+# last update : October 2022
 #
 #################################################################
 import os
@@ -18,9 +18,7 @@ import sys,getopt
 
 from libradtranpy import UVspec3
 
-
-FLAG_DEBUG=False
-FLAG_VERBOSE=False
+FLAG_DEBUG = False
 
 # Definitions and configuration
 #-------------------------------------
@@ -105,7 +103,7 @@ def usageaer():
 
 def usage():
     print("*******************************************************************")
-    print(sys.argv[0],' -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -m<mod> -q<proc>')
+    print(sys.argv[0],' -v -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -m<mod> -q<proc>')
     print(' \t - airmass from 1.0 to 3.0, typical z=1 ')
     print(' \t - pwv is precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm')
     print(' \t - oz ozone in Dobson units from 200 DU to 400 DU')
@@ -113,6 +111,7 @@ def usage():
     print(' \t - p Pressure in hPa, typical P=775.3 hPa  ')
     print(' \t - m Atmospheric model, typical m=us ')
     print(' \t - q Interaction processes, typical q=sa for scattering and absorption')
+    print(' \t - v : activate verbose ')
     print('Number of arguments:', len(sys.argv), 'arguments.')
     print('Argument List:', str(sys.argv))
     print("*******************************************************************")
@@ -123,6 +122,7 @@ def usage():
 def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
     """
      ApplyAerosols(wl,tr,thelambda0,tau0,alpha0)
+     Function to provide the aerosol transmission from an analytical formula
      
      - input :
      -- wl np array of wavelength in nm
@@ -131,6 +131,8 @@ def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
      -- tau0 is the extinction at thelambda0
      -- alpha0 the Angstrom exponent
      
+     - output
+     -- array of aerosol transmission 
     """
     #extinc_aer=tau0*(thelambda0/wl)**alpha0
     extinc_aer=tau0*np.power(wl/thelambda0,-alpha0)
@@ -142,10 +144,24 @@ def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
 #-----------------------------------------------------------------------------
 
 
-def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0):
+def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
     """
     ProcessSimulation(airmass_num,pwv_num,oz_num) 
-    No aerosol simulation is performed
+    Function to simulate air transparency.
+    No aerosol simulation is performed.
+    
+    - input arguments
+    -- airmass_num : airmass
+    -- pwv_num : precipitable water vapor in mm
+    -- num,oz_num : ozone in Dobson Unit
+    -- press_num : ground pressure in hPa
+    -- prof_str : string defining the type of atmosphere
+    -- proc_str : processing string defining the processes
+    -- cloudext : cloud depth
+    -- FLAG_VERBOSE : flag to activate verbose mode
+    
+    Returns:
+     -- return OUTPUTDIR,outputFilename : path and filename of datafile containing the simulated data
     """
 
     if FLAG_DEBUG:
@@ -395,11 +411,24 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
 
 
 #------------------------------------------------------------------------------
-def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0):
+def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
     """
     ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num) 
     with aerosol simulation is performed
-    default profile
+    
+    - input arguments
+    -- airmass_num : airmass
+    -- pwv_num : precipitable water vapor in mm
+    -- num,oz_num : ozone in Dobson Unit
+    -- aer_num : aerosol optical depth
+    -- press_num : ground pressure in hPa
+    -- prof_str : string defining the type of atmosphere
+    -- proc_str : processing string defining the processes
+    -- cloudext : cloud optical depth
+    -- FLAG_VERBOSE : flag to activate verbose mode
+    
+    returns:
+    -- return OUTPUTDIR,outputFilename : path and filename of datafile containing the simulated data
     """
  
     if FLAG_DEBUG:
@@ -664,11 +693,14 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
 
 
 #------------------------------------------------------------------------------
-def ProcessSimulationaer1(airmass_num,pwv_num,oz_num,wl0_num,tau0_num,press_num):  
+def ProcessSimulationaer1(airmass_num,pwv_num,oz_num,wl0_num,tau0_num,press_num, FLAG_VERBOSE=False):  
     """
     ProcessSimulationaer(airmass_num,pwv_num,oz_num) 
     with aerosol simulation is performed
     default profile
+    
+    Deprecated
+    
     """
  
     print('--------------------------------------------')
@@ -899,11 +931,14 @@ def ProcessSimulationaer1(airmass_num,pwv_num,oz_num,wl0_num,tau0_num,press_num)
 
 
 
-def ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num,press_num):  
+def ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num,press_num, FLAG_VERBOSE=False):  
     """
     ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num)
     with aerosol simulation is performed
     default profile
+    
+    deprecated
+    
     """
  
     print('--------------------------------------------')
@@ -1145,15 +1180,6 @@ def ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num,press_nu
 
 
 
-
-
-
-
-
-
-
-
-
 #####################################################################
 # The program simulation start here
 #    NEED TO BE RE-WRITTEN 
@@ -1161,7 +1187,6 @@ def ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num,press_nu
 ####################################################################
 
 if __name__ == "__main__":
-    
     
     AerosolTest_Flag=False
     
@@ -1179,13 +1204,13 @@ if __name__ == "__main__":
     
     if AerosolTest_Flag==False:
         try:
-            opts, args = getopt.getopt(sys.argv[1:],"hz:w:o:p:m:",["z=","w=","o=","p=","m="])
+            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:p:m:",["z=","w=","o=","p=","m="])
         except getopt.GetoptError:
-            print(' Exception bad getopt with :: '+sys.argv[0]+ ' -z <airmass> -w <pwv> -o <oz> -p <press> -m <model>')
+            print(' Exception bad getopt with :: '+sys.argv[0]+ ' -v -z <airmass> -w <pwv> -o <oz> -p <press> -m <model>')
             sys.exit(2)
         
     
-        
+        FLAG_VERBOSE=False
         print('opts = ',opts)
         print('args = ',args)
         
@@ -1194,6 +1219,8 @@ if __name__ == "__main__":
             if opt == '-h':
                 usage()
                 sys.exit()
+            elif opt == '-v':
+                FLAG_VERBOSE=True   
             elif opt in ("-z", "--airmass"):
                 airmass_str = arg
             elif opt in ("-w", "--pwv"):
@@ -1206,7 +1233,7 @@ if __name__ == "__main__":
                 model_str = arg
 
             else:
-                print('Do not understand arguments : ',argv)
+                print('Do not understand arguments : ',sys.argv)
             
          
         print('--------------------------------------------')
@@ -1232,8 +1259,6 @@ if __name__ == "__main__":
         if press_str=="":
             usage()
             sys.exit()
-        
-    
         
 	
 	
@@ -1272,8 +1297,9 @@ if __name__ == "__main__":
         
         # do the simulation now 
         print("values are OK")
-    
-        path, outputfile=ProcessSimulation(airmass_nb,pwv_nb,oz_nb,press_nb,model_str)
+        
+        #ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
+        path, outputfile=ProcessSimulation(airmass_nb,pwv_nb,oz_nb,press_nb,model_str, FLAG_VERBOSE)
     
         print('*****************************************************')
         print(' path       = ', path)
@@ -1283,7 +1309,7 @@ if __name__ == "__main__":
     
     else:
         try:
-            opts, args = getopt.getopt(sys.argv[1:],"hz:w:o:a:p:m:",["z=","w=","o=","a=","p=","m="])
+            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:a:p:m:",["z=","w=","o=","a=","p=","m="])
         except getopt.GetoptError:
             print(' Exception bad getopt with :: '+sys.argv[0]+ ' -z <airmass> -w <pwv> -o <oz> -a <aer> -p <press> -m <model>')
             sys.exit(2)
@@ -1293,11 +1319,14 @@ if __name__ == "__main__":
         print('opts = ',opts)
         print('args = ',args)
         
+        FLAG_VERBOSE = False
         
         for opt, arg in opts:
             if opt == '-h':
                 usage()
                 sys.exit()
+            elif opt == "-v":
+                FLAG_VERBOSE = True
             elif opt in ("-z", "--airmass"):
                 airmass_str = arg
             elif opt in ("-w", "--pwv"):
@@ -1311,7 +1340,7 @@ if __name__ == "__main__":
             elif opt in ("-m", "--am"):
                 model_str = arg
             else:
-                print('Do not understand arguments : ',argv)
+                print('Do not understand arguments : ',sys.argv)
             
          
         print('--------------------------------------------')
@@ -1385,8 +1414,8 @@ if __name__ == "__main__":
         
         # do the simulation now 
         print("values are OK")
-    
-        path, outputfile=ProcessSimulationaer(airmass_nb,pwv_nb,oz_nb,aer_nb,press_nb,model_str)
+        #ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
+        path, outputfile=ProcessSimulationaer(airmass_nb,pwv_nb,oz_nb,aer_nb,press_nb,model_str,FLAG_VERBOSE)
     
         print('*****************************************************')
         print(' path       = ', path)
