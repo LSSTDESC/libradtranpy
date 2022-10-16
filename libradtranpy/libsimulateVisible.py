@@ -5,7 +5,7 @@
 # Here we vary PWV
 # author: sylvielsstfr
 # creation date : November 2nd 2016
-# update : January 2020
+# last update : October 2022
 #
 #################################################################
 import os
@@ -18,9 +18,7 @@ import sys,getopt
 
 from libradtranpy import UVspec3
 
-
-FLAG_DEBUG=False
-FLAG_VERBOSE=False
+FLAG_DEBUG = False
 
 # Definitions and configuration
 #-------------------------------------
@@ -103,26 +101,63 @@ def usageaer():
     print("*******************************************************************")
 
 
+
 def usage():
     print("*******************************************************************")
-    print(sys.argv[0],' -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -m<mod> -q<proc>')
-    print(' \t - airmass from 1.0 to 3.0, typical z=1 ')
-    print(' \t - pwv is precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm')
-    print(' \t - oz ozone in Dobson units from 200 DU to 400 DU')
-    print(' \t - aer means Aerosols, typical a=0.04  ')
-    print(' \t - p Pressure in hPa, typical P=775.3 hPa  ')
-    print(' \t - m Atmospheric model, typical m=us ')
-    print(' \t - q Interaction processes, typical q=sa for scattering and absorption')
-    print('Number of arguments:', len(sys.argv), 'arguments.')
-    print('Argument List:', str(sys.argv))
+    print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -p <P> -c <cld> -m<mod> -q<proc>')
+    print(' \t - z   : airmass from 1.0 to 3.0, typical z=1 ')
+    print(' \t - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm')
+    print(' \t - oz  : ozone in Dobson units from 200 DU to 400 DU')
+    print(' \t - p   : Pressure in hPa, typical P=775.3 hPa  ')
+    print(' \t - c   : Cloud vertical optical depth, typical c=0')
+    print(' \t - m   : Atmospheric model, typical m=\'us\' ')
+    print(' \t - q   : Interaction processes, typical q=\'sa\' for scattering and absorption')
+    print(' \t - v   : activate verbose to get atmospheric profile')
+    
+    
+    print('\t Examples : ')
+    print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0')
+    print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -c 0 -p 742 -m \'us\' -q \'sa\'')
+    
+    print('\t To generate ascii printout of the used atmospheric model tables in a log file :')
+    print('\t \t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 >& output.log')
+    
+    print('\t Actually provided : ')
+    print('\t \t Number of arguments:', len(sys.argv), 'arguments.')
+    print('\t \t Argument List:', str(sys.argv))
+    
     print("*******************************************************************")
     
-
+def usageaer():
+    print("*******************************************************************")
+    print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc>')
+    print(' \t - z   : airmass from 1.0 to 3.0, typical z=1 ')
+    print(' \t - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm')
+    print(' \t - oz  : ozone in Dobson units from 200 DU to 400 DU')
+    print(' \t - aer : Aerosols vertical optical depth, typical a=0.04')
+    print(' \t - p   : Pressure in hPa, typical P=775.3 hPa  ')
+    print(' \t - c   : Cloud vertical optical depth, typical c=0')
+    print(' \t - m   : Atmospheric model, typical m=\'us\' ')
+    print(' \t - q   : Interaction processes, typical q=\'sa\' for scattering and absorption')
+    print(' \t - v   : activate verbose to get atmospheric profile')
+   
+    print('\t Examples : ')
+    print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0')
+    print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -a 0.3 -c 0 -p 742 -m \'us\' -q \'sa\'')
+    
+    print('\t To generate ascii printout of the used atmospheric model table in a log file :')
+    print('\t \t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 >& output.log')
+    
+    print('\t Actually provided : ')
+    print('\t \t Number of arguments:', len(sys.argv), 'arguments.')
+    print('\t \t Argument List:', str(sys.argv))
+    print("*******************************************************************")
 
 #----------------------------------------------------------------------------
 def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
     """
      ApplyAerosols(wl,tr,thelambda0,tau0,alpha0)
+     Function to provide the aerosol transmission from an analytical formula
      
      - input :
      -- wl np array of wavelength in nm
@@ -131,6 +166,8 @@ def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
      -- tau0 is the extinction at thelambda0
      -- alpha0 the Angstrom exponent
      
+     - output
+     -- array of aerosol transmission 
     """
     #extinc_aer=tau0*(thelambda0/wl)**alpha0
     extinc_aer=tau0*np.power(wl/thelambda0,-alpha0)
@@ -142,10 +179,24 @@ def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
 #-----------------------------------------------------------------------------
 
 
-def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0):
+def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
     """
     ProcessSimulation(airmass_num,pwv_num,oz_num) 
-    No aerosol simulation is performed
+    Function to simulate air transparency.
+    No aerosol simulation is performed.
+    
+    - input arguments
+    -- airmass_num : airmass
+    -- pwv_num : precipitable water vapor in mm
+    -- num,oz_num : ozone in Dobson Unit
+    -- press_num : ground pressure in hPa
+    -- prof_str : string defining the type of atmosphere
+    -- proc_str : processing string defining the processes
+    -- cloudext : cloud depth
+    -- FLAG_VERBOSE : flag to activate verbose mode
+    
+    Returns:
+     -- return OUTPUTDIR,outputFilename : path and filename of datafile containing the simulated data
     """
 
     if FLAG_DEBUG:
@@ -395,11 +446,24 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
 
 
 #------------------------------------------------------------------------------
-def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0):
+def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
     """
     ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num) 
     with aerosol simulation is performed
-    default profile
+    
+    - input arguments
+    -- airmass_num : airmass
+    -- pwv_num : precipitable water vapor in mm
+    -- num,oz_num : ozone in Dobson Unit
+    -- aer_num : aerosol optical depth
+    -- press_num : ground pressure in hPa
+    -- prof_str : string defining the type of atmosphere
+    -- proc_str : processing string defining the processes
+    -- cloudext : cloud optical depth
+    -- FLAG_VERBOSE : flag to activate verbose mode
+    
+    returns:
+    -- return OUTPUTDIR,outputFilename : path and filename of datafile containing the simulated data
     """
  
     if FLAG_DEBUG:
@@ -664,11 +728,14 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
 
 
 #------------------------------------------------------------------------------
-def ProcessSimulationaer1(airmass_num,pwv_num,oz_num,wl0_num,tau0_num,press_num):  
+def ProcessSimulationaer1(airmass_num,pwv_num,oz_num,wl0_num,tau0_num,press_num, FLAG_VERBOSE=False):  
     """
     ProcessSimulationaer(airmass_num,pwv_num,oz_num) 
     with aerosol simulation is performed
     default profile
+    
+    Deprecated
+    
     """
  
     print('--------------------------------------------')
@@ -899,11 +966,14 @@ def ProcessSimulationaer1(airmass_num,pwv_num,oz_num,wl0_num,tau0_num,press_num)
 
 
 
-def ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num,press_num):  
+def ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num,press_num, FLAG_VERBOSE=False):  
     """
     ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num)
     with aerosol simulation is performed
     default profile
+    
+    deprecated
+    
     """
  
     print('--------------------------------------------')
@@ -1145,47 +1215,52 @@ def ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num,press_nu
 
 
 
-
-
-
-
-
-
-
-
-
-#####################################################################
-# The program simulation start here
-#    NEED TO BE RE-WRITTEN 
-#
-####################################################################
+######################################################################################
+# The main program for starting atmospheric simulation start here
+#####################################################################################
 
 if __name__ == "__main__":
     
-    
-    AerosolTest_Flag=False
+    # Activate or not the mode with simulation of aerosols inside libradtran
+    AerosolTest_Flag=True
     
     # init string variables
+    # airmass
     airmass_str=""
+    # precipitable water vapor
     pwv_str=""
+    # ozone
     oz_str=""
+    # ground pressure
     press_str=""
+    # aerosol optical depth
     aer_str=""
+    # aeorosol reference wavelength
     wl0_str=""
+    # cloud optical depth
     tau0_str=""
+    # cloud optical depth
+    cld_str=""
+    # atmospheric model to be used
+    # 'us':'afglus','ms':'afglms','mw':'afglmw','tp':'afglt','ss':'afglss','sw':'afglsw'
     model_str=""
+    # interaction process=""
+    # 'sa': scattering and absorption, 'sc' : scattering only , 'ab' : absorption only
+    proc_str=""
     
     # Case No Aerosols
+    # airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0
     
+    # No aerosol, just call function ProcessSimulation()
     if AerosolTest_Flag==False:
         try:
-            opts, args = getopt.getopt(sys.argv[1:],"hz:w:o:p:m:",["z=","w=","o=","p=","m="])
+            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:p:c:m:q:",["z=","w=","o=","p=","c=","m=","q="])
         except getopt.GetoptError:
-            print(' Exception bad getopt with :: '+sys.argv[0]+ ' -z <airmass> -w <pwv> -o <oz> -p <press> -m <model>')
+            print(' Exception bad getopt with :: '+sys.argv[0]+ ' [-v] -z <airmass> -w <pwv> -o <oz> -p <press> -c <cldvod> -m <atmmodel> -q <interactproc>')
             sys.exit(2)
         
     
-        
+        FLAG_VERBOSE=False
         print('opts = ',opts)
         print('args = ',args)
         
@@ -1194,6 +1269,8 @@ if __name__ == "__main__":
             if opt == '-h':
                 usage()
                 sys.exit()
+            elif opt == '-v':
+                FLAG_VERBOSE=True   
             elif opt in ("-z", "--airmass"):
                 airmass_str = arg
             elif opt in ("-w", "--pwv"):
@@ -1202,21 +1279,30 @@ if __name__ == "__main__":
                 oz_str = arg  
             elif opt in ("-p", "--pr"):
                 press_str = arg
-            elif opt in ("-m", "--am"):
+            elif opt in ("-c", "--cld"):
+                cld_str = arg
+            elif opt in ("-m", "--atm"):
                 model_str = arg
+            elif opt in ("-q", "--qp"):
+                proc_str = arg
 
             else:
-                print('Do not understand arguments : ',argv)
+                print('Do not understand arguments : ',sys.argv)
             
          
-        print('--------------------------------------------')
+        print('---Decoded the following args : ------')
         print('1) airmass-str = ', airmass_str)
         print('2) pwv-str = ', pwv_str)
         print("3) oz-str = ", oz_str)
         print("4) pr = ", press_str)
-        print("5) mod = ",model_str)
+        print("5) cld = ", cld_str)
+        print("6) mod = ",model_str)
+        print("7) proc = ",proc_str)
+        print("8) FLAG_VERBOSE = ",FLAG_VERBOSE)
+        print("9) FLAG_DEBUG = ",FLAG_DEBUG)
         print('--------------------------------------------')
 
+        # mandatory arguments
         if airmass_str=="":
             usage()
             sys.exit()
@@ -1228,64 +1314,80 @@ if __name__ == "__main__":
         if oz_str=="":
             usage()
             sys.exit()
-            
-        if press_str=="":
-            usage()
-            sys.exit()
+             
         
-    
-        
-	
-	
         airmass_nb=float(airmass_str)
         pwv_nb=float(pwv_str)
         oz_nb=float(oz_str)	
-        press_nb=float(press_str)
+    
         
-        print('--------------------------------------------')
+        # optional arguments
+        # pressure
+        if press_str=="":
+            press_str="743."
+        press_nb=float(press_str)
+          
+        # cloud
+        if cld_str=="":
+            cld_str = "0"    
+        cld_nb = float(cld_str)
+        
+        if model_str=="":
+            model_str="us"
+        if proc_str=="":
+            proc_str="sa"
+        
+        print('----Selected parameters : -----------------')
         print('1) airmass  = ', airmass_nb)
         print('2) pwv = ', pwv_nb)
         print("3) oz = ", oz_nb)
         print("4) press = ", press_nb)
-        print("5) model = ", model_str)
+        print("5) cld = ", cld_nb)
+        print("6) atm model = ", model_str)
+        print("7) interaction model = ", proc_str)
         print('--------------------------------------------')
         
     
+        # Check consistency of values
+        
         if airmass_nb<1 or airmass_nb >3 :
-            print("bad airmass value z=",airmass_nb)
+            print("bad airmass value : z=",airmass_nb)
             sys.exit()
             
         if pwv_nb<0 or pwv_nb >50 :
-            print("bad PWV value pwv=",pwv_nb)
+            print("bad PWV value : pwv=",pwv_nb)
             sys.exit()
         
         if oz_nb<0 or oz_nb >600 :
-            print("bad Ozone value oz=",oz_nb)
+            print("bad Ozone value : oz=",oz_nb)
             sys.exit()
-            
-        
-        
+              
         if press_nb<0 or press_nb >1500 :
-            print("bad Pressure value press=",press_nb)
+            print("bad Pressure value : press=",press_nb)
+            sys.exit()
+        
+        if cld_nb<0 or cld_nb >100 :
+            print("bad cloud optical depth value : cld=",cld_nb)
             sys.exit()
         
         
         # do the simulation now 
-        print("values are OK")
-    
-        path, outputfile=ProcessSimulation(airmass_nb,pwv_nb,oz_nb,press_nb,model_str)
+        print("all arguments values are OK, start libradtran simulation")
+        
+        #ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
+        path, outputfile=ProcessSimulation(airmass_nb,pwv_nb,oz_nb,press_nb,model_str,proc_str=proc_str,cloudext=cld_nb ,FLAG_VERBOSE=FLAG_VERBOSE)
     
         print('*****************************************************')
         print(' path       = ', path)
         print(' outputfile =  ', outputfile)
         print('*****************************************************')
     
-    
+    # With aerosol, just call function ProcessSimulationaer()
     else:
         try:
-            opts, args = getopt.getopt(sys.argv[1:],"hz:w:o:a:p:m:",["z=","w=","o=","a=","p=","m="])
+            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:a:p:c:m:q:",["z=","w=","o=","a=","p=","c=","m=","q="])
         except getopt.GetoptError:
-            print(' Exception bad getopt with :: '+sys.argv[0]+ ' -z <airmass> -w <pwv> -o <oz> -a <aer> -p <press> -m <model>')
+            print(' Exception bad getopt with :: '+sys.argv[0]+ ' -z <airmass> -w <pwv> -o <oz> -a <aer> -p <press> -c <cldvod>-m <model> -q <interaction>')
             sys.exit(2)
         
     
@@ -1293,11 +1395,14 @@ if __name__ == "__main__":
         print('opts = ',opts)
         print('args = ',args)
         
+        FLAG_VERBOSE = False
         
         for opt, arg in opts:
             if opt == '-h':
-                usage()
+                usageaer()
                 sys.exit()
+            elif opt == "-v":
+                FLAG_VERBOSE = True
             elif opt in ("-z", "--airmass"):
                 airmass_str = arg
             elif opt in ("-w", "--pwv"):
@@ -1308,48 +1413,68 @@ if __name__ == "__main__":
                 aer_str = arg 
             elif opt in ("-p", "--pr"):
                 press_str = arg
+            elif opt in ("-c", "--cld"):
+                cld_str = arg
             elif opt in ("-m", "--am"):
                 model_str = arg
+            elif opt in ("-q", "--qp"):
+                proc_str = arg
             else:
-                print('Do not understand arguments : ',argv)
+                print('Do not understand arguments : ',sys.argv)
             
          
-        print('--------------------------------------------')
+        print('---Decode the following arguments ----------')
         print('1) airmass-str = ', airmass_str)
         print('2) pwv-str = ', pwv_str)
         print("3) oz-str = ", oz_str)
         print("4) aer = ", aer_str)
-        print("5) pr = ", press_str)
-        print("6) mod = ", model_str)
+        print("5) press = ", press_str)
+        print("6) cld = ", cld_str)
+        print("7) mod = ", model_str)
+        print("8) proc = ", proc_str)
+        print("9) FLAG_VERBOSE = ",FLAG_VERBOSE)
+        print("10) FLAG_DEBUG = ",FLAG_DEBUG)
         print('--------------------------------------------')
 
+        # mandatory arguments
         if airmass_str=="":
-            usage()
+            usageaer()
             sys.exit()
 
         if pwv_str=="":
-            usage()
+            usageaer()
             sys.exit()
 
         if oz_str=="":
-            usage()
+            usageaer()
             sys.exit()
             
-        if press_str=="":
-            usage()
-            sys.exit()
-        
-        if aer_str=="":
-            usage()
-            sys.exit()
-        
-	
-	
         airmass_nb=float(airmass_str)
         pwv_nb=float(pwv_str)
         oz_nb=float(oz_str)	
-        aer_nb=float(aer_str)
-        press_nb=float(press_str)
+        
+        
+         # optional arguments
+        # pressure
+        if press_str== "":
+            press_str= "743.0"
+        press_nb=float(press_str)  
+        
+        #aerosols
+        if aer_str== "":
+            aer_str = "0.0"    
+        aer_nb = float(aer_str)
+         
+        # cloud
+        if cld_str=="":
+            cld_str = "0.0"    
+        cld_nb = float(cld_str)
+        
+        if model_str == "":
+            model_str = "us"
+        if proc_str == "":
+            proc_str = "sa"
+	
         
         print('--------------------------------------------')
         print('1) airmass  = ', airmass_nb)
@@ -1357,9 +1482,15 @@ if __name__ == "__main__":
         print("3) oz = ", oz_nb)
         print("4) aer = ", aer_nb)
         print("5) press = ", press_nb)
-        print("6) model = ", model_str)
+        print("6) cld = ", cld_nb)
+        print("7) atm model = ", model_str)
+        print("8) interaction process = ", proc_str)
+        print("9) FLAG_VERBOSE = ",FLAG_VERBOSE)
+        print("10) FLAG_DEBUG = ",FLAG_DEBUG)
         print('--------------------------------------------')
         
+        
+        # Check the consistency of values
     
         if airmass_nb<1 or airmass_nb >3 :
             print("bad airmass value z=",airmass_nb)
@@ -1381,12 +1512,16 @@ if __name__ == "__main__":
         if press_nb<0 or press_nb >1500 :
             print("bad Pressure value press=",press_nb)
             sys.exit()
+            
+        if cld_nb<0 or cld_nb >100 :
+            print("bad cloud optical depth value : cld=",cld_nb)
+            sys.exit()
         
         
         # do the simulation now 
         print("values are OK")
-    
-        path, outputfile=ProcessSimulationaer(airmass_nb,pwv_nb,oz_nb,aer_nb,press_nb,model_str)
+        #ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
+        path, outputfile=ProcessSimulationaer(airmass_nb,pwv_nb,oz_nb,aer_nb,press_nb,model_str,proc_str,cloudext=cld_nb,FLAG_VERBOSE=FLAG_VERBOSE)
     
         print('*****************************************************')
         print(' path       = ', path)
