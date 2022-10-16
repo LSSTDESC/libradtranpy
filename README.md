@@ -20,14 +20,14 @@ Environnement variable **LIBRADTRANDIR** must be set to libradtran installation 
 
 ex:
 
-		ls $LIBRADTRANDIR
-			bin                     data                    include                 			lib                     libRadtran-2.0.3        			libradtran-2.0.3.tar.gz share
+	ls $LIBRADTRANDIR
+	bin                     data                    include                 	lib                     libRadtran-2.0.3        	libradtran-2.0.3.tar.gz share
 
 
 ### Installation of libradtranpy
 
-       cd libradtranpy
-       python setup.py install
+    cd libradtranpy
+    python setup.py install
        
 ## Use if libradtranpy
 
@@ -52,13 +52,47 @@ if **libradtranpy/libradtranpy/libsimulateVisible.py** is in the python path:
 	 	 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -a 0.3 -c 0 -p 742 -m 'us' -q 'sa'
 	 To generate ascii printout of the used atmospheric model table in a log file :
 	 	 python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 >& output.log
-	 Actually provided : 
-	 	 Number of arguments: 2 arguments.
-	 	 Argument List: ['libradtranpy/libsimulateVisible.py', '-h'] 
+	 
+
+### Outputs of libradtran
+
+**Librandtran** generate output acii files consisting of rows of (wavelength, transmission).
+ 
+**librandtranpy** manages the different simulations and their output files in a hierarchical directories. The top level directory is **simulations/**.
+
+The output of libradtran can be found in subdirs of **simulations/RT/2.0.3/LS/pp/**.
+
+
+
 	 	 
 	 	 
 ### Use of libradtranpy as python package library
 
-- See the notebooks examples in **libradtranpy/notebooks/**
+The call of libradtran through libradtranpy can be done as follow:
+
+    from libradtranpy import libsimulateVisible
+      
+A call without aerosols:
+
+    path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,pressure,
+                                                      prof_str='us',proc_str='sa',cloudext=cloudext)
+A call with aerosols:
+
+    path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pressure,
+                                                      prof_str='us',proc_str='sa',cloudext=cloudext)
+
+
+**path,thefilename** are the path and filename of the output ascii file.
+
+The result of the simulation can be obtaiend by:
+
+    data = np.loadtxt(os.path.join(path,thefile))
+    wl = data[:,0]
+    atm = data[:,1]                                                 
+                                                      
+                                                      
+
+- See the notebooks for more examples in **libradtranpy/notebooks/**
+
 
 
