@@ -3,6 +3,7 @@
 - author : Sylvie Dagoret-Campagne
 - affiliation : IJCLab/IN2P3/CNRS
 - creation date : October 2022
+- Last update : October 18th 2022
 
 
 ## Installation
@@ -93,6 +94,13 @@ The result of the simulation can be obtaiend by:
                                                       
 
 - See the notebooks for more examples in **libradtranpy/notebooks/**
+
+
+
+## Tools
+
+In **libradtrapy/tools/** a usefull library to evaluate the pressure and density profile vs altitude with analytical formula and the computation of Rayleigh and Aerosols optical depth vs wavelength.
+These tools are usefull to test the output of libradtran.
 
 
 
