@@ -39,7 +39,8 @@ Rte='pp'   # pp for parallel plane of ps for pseudo-spherical
 Atm=['us']   # short name of atmospheric sky here US standard and  Subarctic winter
 Proc='sa'  # light interaction processes : sc for pure scattering,ab for pure absorption
            # sa for scattering and absorption, ae with aerosols default, as with aerosol special
-Mod='rtvis'   # Models for absorption bands : rt for REPTRAN, lt for LOWTRAN, k2 for Kato2
+#Mod='rtvis'   # Models for absorption bands : rt for REPTRAN, lt for LOWTRAN, k2 for Kato2
+Mod='lt'   # Models for absorption bands : rt for REPTRAN, lt for LOWTRAN, k2 for Kato2
 ZXX='z'        # XX index for airmass z :   XX=int(10*z)
 WVXX='wv'      # XX index for PWV       :   XX=int(pwv*10)
 OZXX='oz'      # XX index for OZ        :   XX=int(oz/10)
@@ -217,7 +218,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         Proc=proc_str
    
     # set the selected atmosphere
-    if prof_str in ["us","ms","mw","tp","ss","sw"]:
+    if prof_str in ["us", "ms", "mw", "tp", "ss", "sw", "all"]: #J.Chevalier : add the "all" option for looping / testing purposes
         Atm=[prof_str]
    
     ensure_dir(TOPDIR)
@@ -301,11 +302,19 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
             theatmospheres.append('afglms')
         if re.search('tp',skyindex):
             theatmospheres.append('afglt')
+        if re.search('all',skyindex):
+            theatmospheres.append('afglus')
+            theatmospheres.append('afglsw')
+            theatmospheres.append('afglss')
+            theatmospheres.append('afglmw')
+            theatmospheres.append('afglms')
+            theatmospheres.append('afglt')
             
     
    
 
     # 1) LOOP ON ATMOSPHERE
+    outdirs, outfiles = [], []
     for atmosphere in theatmospheres:
         atmkey=atmosphere_map[atmosphere]
        
@@ -321,7 +330,10 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         # loop on molecular model resolution
         #molecularresolution = np.array(['COARSE','MEDIUM','FINE']) 
         # select only COARSE Model
-        molecularresolution = np.array(['COARSE'])    
+        #molecularresolution = np.array(['COARSE'])     
+        
+        # select only MEDIUM Model
+        molecularresolution = np.array(['MEDIUM']) ## Mod. By Joseph Chevalier for eqw calc
         for molres in molecularresolution:
             if molres=='COARSE':
                 molresol ='coarse'
@@ -331,10 +343,13 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
                 molresol ='fine'
            
         
-        #water vapor   
-        pwv_val=pwv_num
-        pwv_str='H2O '+str(pwv_val)+ ' MM'
-        wvfileindex=int(10*pwv_val)
+        #water vapor
+        if pwv_num >= 0.:   
+            pwv_val=pwv_num
+            pwv_str='H2O '+str(pwv_val)+ ' MM'
+            wvfileindex=str(int(10*pwv_val))
+        else:
+            wvfileindex=""
            
            
         # airmass
@@ -342,15 +357,18 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         amfileindex=int(airmass_num*10)
         
         # Ozone    
-        oz_str='O3 '+str(oz_num)+ ' DU'
-        ozfileindex=int(oz_num/10.)
+        if oz_num >= 0.:
+            oz_str='O3 '+str(oz_num)+ ' DU'
+            ozfileindex=str(int(oz_num/10.))
+        else:
+            ozfileindex=""
 
         #Cloud
         cldindex = str(int(cloudext * 1000))     
         cld_str=cldindex.zfill(4)
         
             
-        BaseFilename=BaseFilename_part1+atmkey+'_'+Proc+'_'+Mod+'_z'+str(amfileindex)+'_'+WVXX+str(wvfileindex) +'_'+OZXX+str(ozfileindex) +"_"+CLD+cld_str
+        BaseFilename=BaseFilename_part1+atmkey+'_'+Proc+'_'+Mod+'_z'+str(amfileindex)+'_'+WVXX+wvfileindex +'_'+OZXX+ozfileindex +"_"+CLD+cld_str
                     
         #verbose=True
         verbose=FLAG_DEBUG
@@ -388,9 +406,11 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         if runtype=='no_absorption':
             uvspec.inp["no_absorption"] = ''
      
-        # set up the ozone value               
-        uvspec.inp["mol_modify"] = pwv_str
-        uvspec.inp["mol_modify2"] = oz_str
+        # set up the ozone value
+        if pwv_num >= 0.:
+            uvspec.inp["mol_modify"] = pwv_str
+        if oz_num >= 0.:
+            uvspec.inp["mol_modify2"] = oz_str
         
         # rescale pressure   if reasonable pressure values are provided
         if press_num>400. and press_num<1030.:
@@ -403,6 +423,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         uvspec.inp["output_user"] = 'lambda edir'
         uvspec.inp["altitude"] = OBS_Altitude   # Altitude  observatory
         uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
+        #uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_0.1nm.dat'
         #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_1.0nm.dat'
         #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_0.1nm.dat'
         uvspec.inp["sza"]        = str(sza)
@@ -439,8 +460,11 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         uvspec.write_input(inp)
         uvspec.run(inp,out,verbose,path=libradtranpath)
         
+        outdirs.append(OUTPUTDIR)
+        outfiles.append(outputFilename)
         
-    return OUTPUTDIR,outputFilename
+    #return OUTPUTDIR,outputFilename
+    return outdirs, outfiles
 
 #---------------------------------------------------------------------------
 

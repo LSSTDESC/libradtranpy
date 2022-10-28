@@ -55,6 +55,8 @@ from scipy.integrate import quad
 from scipy.stats import norm
 import pickle
 
+from libradtranpy import libsimulateVisible
+
 #####################################
 ## Main function definition, could ##
 ##    be done outside this block   ##
@@ -72,10 +74,15 @@ def fit_gaussian(x, flux, abs_min, abs_max, central_lambda=None):
     
     #print("dbg - O2 line center : {} nm".format(central_lambda))
     
-    p1, cov = curve_fit(fun_fit, xmasked, flux[mask_for_fit], p0=[1., 0.0, central_lambda, 2.0, 1.0])
+    p1, cov = curve_fit(fun_fit, xmasked, flux[mask_for_fit], p0=[0., 1.0, central_lambda, 2.0, 1.0])
     min_cont, max_cont = p1[2] - 5*p1[3], p1[2] + 5*p1[3]
+    #print("DEBUG: borne inf = {}nm, borne sup. = {}nm".format(min_cont, max_cont)) ## Add instruction for debug in fine mode
     xmask_continuum = (x >= min_cont) * (x <= max_cont)
     
+    while len(x[xmask_continuum]) < len(p1):
+	    min_cont -= 1.
+	    max_cont += 1.
+	    xmask_continuum = (x >= min_cont) * (x <= max_cont)
     mod, cov = curve_fit(fun_fit, x[xmask_continuum], flux[xmask_continuum], p0=[p1[0], p1[1], p1[2], p1[3], p1[4]])
     min_lin, max_lin = mod[2] - 3*mod[3], mod[2] + 3*mod[3]
     min_cont, max_cont = mod[2] - 5*mod[3], mod[2] + 5*mod[3]
@@ -198,7 +205,7 @@ def eqw_norm(x, flux, abs_min, abs_max, central_lambda=None, gaussMod_band=None,
     #print(xmin_line-eqw/2.,xmin_line+eqw/2.)
     
     if make_plot:
-        fig, axs=plt.subplots(1,2,figsize=(10,6), constrained_layout=True)
+        fig, axs=plt.subplots(1,2)#figsize=(10,6), constrained_layout=True)
         axs=axs.ravel()
         axs[0].scatter(xline0, fline0, marker="+", label="Observed fluxes")
         axs[0].plot(xline0, continuum(xline0), ls='--', color='orange', label="Continuum model")
@@ -245,7 +252,39 @@ def eqw_norm(x, flux, abs_min, abs_max, central_lambda=None, gaussMod_band=None,
         return eqw, sigmaBand, eqw_err_, mod, cov, xline, fline, continuum(xline), cont_min, area_l, area_c_err
     else:
         return eqw, sigmaBand, eqw_err_, area_c_err, cont_err_, area_ul_err_, area_l_err_
-	
+        
+def simAtmEqw(airmasses, pressures, wl_min=700., wl_max=800., wl_mid=761.0, lims=None, pwv=0.0, oz=300.0, atm='us', inter='sa', clouds=0.0, flagVerbose=False):
+	'''
+	airmasses and pressures must be 1D-lists with the same length.
+	Returns the equivalent widths and associated errors for the specified atmosphere(s) (possibility to use "all")
+	For each couple of values : airmass, pressure.
+	The result is returned as a list of arrays : - dimension along axis 0 equals len(returned list)=len(airmasses)=len(pressures)
+	                                             - dimension along axis 1 equals the number of atmospheres (1 or 6 if "all" is specified) -- array axis 0
+	                                             - dimension along axis 2 equals 3 : atmosphere name, eq. width, eq. width error -- array axis 1
+	                                             
+    DEFAULT VALUES ARE FOR THE O2 ABSORPTION BAND OF THE ATMOSPHERE (test case of this program)
+	'''
+	results_am_press = []
+	for am, press in zip(airmasses, pressures):
+		outpaths, outfiles = libsimulateVisible.ProcessSimulation(am, pwv, oz, press, prof_str=atm, proc_str=inter, cloudext=clouds, FLAG_VERBOSE=flagVerbose)
+		filepaths = [ os.path.join(path_, file_) for path_, file_ in zip(outpaths, outfiles) ]
+		eqws = []
+		atms = []
+		eqwErrs = []
+		for dataFile in filepaths:
+			data = np.loadtxt(dataFile)
+			atmType = dataFile.split('/')[-5]
+			print(atmType)
+			wl = data[:,0]
+			transm = data[:,1]
+			gaussMod, gaussCov, gaussLimits = fit_gaussian(wl, transm, wl_min, wl_max, central_lambda=wl_mid)
+			eqw_, sigmaBand_, eqwErr_, areaC_err , cont_err_, areaUL_err_, areaL_err_= eqw_norm(wl, transm, wl_min, wl_max, central_lambda=gaussMod[2], gaussMod_band=gaussMod, limits=lims, fit_band=False, return_fit=False, make_plot=False)
+			eqws.append(eqw_)
+			eqwErrs.append(eqwErr_)
+			atms.append(atmType)
+		eqwArr = np.column_stack((atms, eqws, eqwErrs))
+		results_am_press.append(eqwArr)
+	return results_am_press
 
 def main(args):
     return 0
