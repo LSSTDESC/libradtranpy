@@ -30,7 +30,7 @@ Creation date : October 20, 2022
 """
 
 """
-Latest update : October 20, 2022
+Latest update : November 02, 2022
 """
 
 """
@@ -61,7 +61,7 @@ from libradtranpy import libsimulateVisible
 ## Main function definition, could ##
 ##    be done outside this block   ##
 #####################################
-def fit_gaussian(x, flux, abs_min, abs_max, central_lambda=None):
+def fit_gaussian(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None):
 
     def fun_fit(t, a, b, mu, sigma, k):
         o2abs = norm(loc=mu, scale=sigma)
@@ -73,8 +73,10 @@ def fit_gaussian(x, flux, abs_min, abs_max, central_lambda=None):
         central_lambda = xmasked[ np.where( flux[mask_for_fit] == np.min(flux[mask_for_fit]) )[0] ][0] ## caution : the minimum could be in the continuum if the interval around the band is too wide
     
     #print("dbg - O2 line center : {} nm".format(central_lambda))
-    
-    p1, cov = curve_fit(fun_fit, xmasked, flux[mask_for_fit], p0=[0., 1.0, central_lambda, 2.0, 1.0])
+    if sigma_flux is not None:
+		p1, cov = curve_fit(fun_fit, xmasked, flux[mask_for_fit], p0=[0., 1.0, central_lambda, 2.0, 1.0], sigma=sigma_flux[mask_for_fit])
+	else:
+		p1, cov = curve_fit(fun_fit, xmasked, flux[mask_for_fit], p0=[0., 1.0, central_lambda, 2.0, 1.0], sigma=None)
     min_cont, max_cont = p1[2] - 5*p1[3], p1[2] + 5*p1[3]
     #print("DEBUG: borne inf = {}nm, borne sup. = {}nm".format(min_cont, max_cont)) ## Add instruction for debug in fine mode
     xmask_continuum = (x >= min_cont) * (x <= max_cont)
@@ -83,7 +85,11 @@ def fit_gaussian(x, flux, abs_min, abs_max, central_lambda=None):
 	    min_cont -= 1.
 	    max_cont += 1.
 	    xmask_continuum = (x >= min_cont) * (x <= max_cont)
-    mod, cov = curve_fit(fun_fit, x[xmask_continuum], flux[xmask_continuum], p0=[p1[0], p1[1], p1[2], p1[3], p1[4]])
+	if sigma_flux is not None:
+		mod, cov = curve_fit(fun_fit, x[xmask_continuum], flux[xmask_continuum], p0=[p1[0], p1[1], p1[2], p1[3], p1[4]], sigma=sigma_flux[xmask_continuum])
+	else:
+		mod, cov = curve_fit(fun_fit, x[xmask_continuum], flux[xmask_continuum], p0=[p1[0], p1[1], p1[2], p1[3], p1[4]], sigma=None)
+		
     min_lin, max_lin = mod[2] - 3*mod[3], mod[2] + 3*mod[3]
     min_cont, max_cont = mod[2] - 5*mod[3], mod[2] + 5*mod[3]
     limits_ = np.array([min_cont, min_lin, max_lin, max_cont])
@@ -91,7 +97,7 @@ def fit_gaussian(x, flux, abs_min, abs_max, central_lambda=None):
     return mod, cov, limits_
 
 
-def eqw_norm(x, flux, abs_min, abs_max, central_lambda=None, gaussMod_band=None, limits=None, fit_band=True, return_fit=False, make_plot=True, plot_name='test.png'): 
+def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, gaussMod_band=None, limits=None, fit_band=True, return_fit=False, make_plot=True, plot_name='test.png'): 
     
     def continuum_error(l0, sigma_a, sigma_b):
         return np.sqrt( np.power(sigma_a*l0, 2.) + np.power(sigma_b, 2.) )
@@ -111,11 +117,11 @@ def eqw_norm(x, flux, abs_min, abs_max, central_lambda=None, gaussMod_band=None,
         fit_band=True
     
     if fit_band:
-        mod, cov, lims = fit_gaussian(x, flux, abs_min, abs_max, central_lambda)
-        init=[mod[0], mod[1]]
-        o2_band_centre = mod[2]
-        sigmaBand = mod[3]
-        kBand = mod[4]
+        gaussMod_band, cov, lims = fit_gaussian(x, flux, abs_min, abs_max, sigma_flux, central_lambda)
+        init=[gaussMod_band[0], gaussMod_band[1]]
+        o2_band_centre = gaussMod_band[2]
+        sigmaBand = gaussMod_band[3]
+        kBand = gaussMod_band[4]
         min_cont, min_lin, max_lin, max_cont = lims[0], lims[1], lims[2], lims[3]
         #delta_line = np.sqrt(cov[2,2])
     else:
@@ -132,8 +138,12 @@ def eqw_norm(x, flux, abs_min, abs_max, central_lambda=None, gaussMod_band=None,
     def lin_fun(x, a, b):
         return a*x+b
     
+    limits_ = np.array([min_cont, min_lin, max_lin, max_cont])
     xmask_contForFit = (x >= min_cont)*(x<=min_lin) + (x<=max_cont)*(x>=max_lin)
-    contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init)
+    if sigma_flux is not None:
+		contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init, sigma=sigma_flux)
+	else:
+		contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init, sigma=None)
     
     def continuum(x):
         return contMod[0]*x+contMod[1]
@@ -143,9 +153,13 @@ def eqw_norm(x, flux, abs_min, abs_max, central_lambda=None, gaussMod_band=None,
     mask_for_fit = (x >= abs_min) * (x <= abs_max)
     xline0 = x[mask_for_fit]
     fline0 = flux[mask_for_fit]
+    if sigma_flux is not None:
+		fline_err0 = sigma_flux[mask_for_fit]
     
     xline = x[xmask_continuum]
     fline = flux[xmask_continuum]
+    if sigma_flux is not None:
+		fline_err = sigma_flux[xmask_continuum]
     xmask_line = (xline>=min_lin)*(xline<=max_lin)
     xline_model = xline[xmask_line]
     
@@ -187,8 +201,11 @@ def eqw_norm(x, flux, abs_min, abs_max, central_lambda=None, gaussMod_band=None,
     
     cont_err_ = continuum_error(o2_band_centre, sigma_a, sigma_b)
     #print(cont_err_)
-    
-    area_ul_err_ = area_ul_error(fline[xmask_line]/continuum(norm_array[xmask_line]), xline_model)
+    if sigma_flux is not None:
+		area_ul_err_ = area_ul_error(fline_err[xmask_line]/continuum(norm_array[xmask_line]), xline_model)
+	else:
+		area_ul_err_ = area_ul_error(np.ones_like(xline_model)*0.02, xline_model) ## default 2% error to ensure that the code runs
+		
     #print(area_ul_err_)
     
     area_l_err_ = area_l_error(area_c_err, area_ul_err_)
@@ -249,7 +266,7 @@ def eqw_norm(x, flux, abs_min, abs_max, central_lambda=None, gaussMod_band=None,
         plt.savefig(plot_outdir+plot_name) 
         '''
     if return_fit:
-        return eqw, sigmaBand, eqw_err_, mod, cov, xline, fline, continuum(xline), cont_min, area_l, area_c_err
+        return eqw, sigmaBand, eqw_err_, spec_mod, continuum, limits_
     else:
         return eqw, sigmaBand, eqw_err_, area_c_err, cont_err_, area_ul_err_, area_l_err_
         
