@@ -74,22 +74,22 @@ def fit_gaussian(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None
     
     #print("dbg - O2 line center : {} nm".format(central_lambda))
     if sigma_flux is not None:
-		p1, cov = curve_fit(fun_fit, xmasked, flux[mask_for_fit], p0=[0., 1.0, central_lambda, 2.0, 1.0], sigma=sigma_flux[mask_for_fit])
-	else:
-		p1, cov = curve_fit(fun_fit, xmasked, flux[mask_for_fit], p0=[0., 1.0, central_lambda, 2.0, 1.0], sigma=None)
+        p1, cov = curve_fit(fun_fit, xmasked, flux[mask_for_fit], p0=[0., 1.0, central_lambda, 2.0, 1.0], sigma=sigma_flux[mask_for_fit], absolute_sigma=True)
+    else:
+        p1, cov = curve_fit(fun_fit, xmasked, flux[mask_for_fit], p0=[0., 1.0, central_lambda, 2.0, 1.0], sigma=None)
     min_cont, max_cont = p1[2] - 5*p1[3], p1[2] + 5*p1[3]
     #print("DEBUG: borne inf = {}nm, borne sup. = {}nm".format(min_cont, max_cont)) ## Add instruction for debug in fine mode
     xmask_continuum = (x >= min_cont) * (x <= max_cont)
     
     while len(x[xmask_continuum]) < len(p1):
-	    min_cont -= 1.
-	    max_cont += 1.
-	    xmask_continuum = (x >= min_cont) * (x <= max_cont)
-	if sigma_flux is not None:
-		mod, cov = curve_fit(fun_fit, x[xmask_continuum], flux[xmask_continuum], p0=[p1[0], p1[1], p1[2], p1[3], p1[4]], sigma=sigma_flux[xmask_continuum])
-	else:
-		mod, cov = curve_fit(fun_fit, x[xmask_continuum], flux[xmask_continuum], p0=[p1[0], p1[1], p1[2], p1[3], p1[4]], sigma=None)
-		
+        min_cont -= 1.
+        max_cont += 1.
+        xmask_continuum = (x >= min_cont) * (x <= max_cont)
+    if sigma_flux is not None:
+        mod, cov = curve_fit(fun_fit, x[xmask_continuum], flux[xmask_continuum], p0=[p1[0], p1[1], p1[2], p1[3], p1[4]], sigma=sigma_flux[xmask_continuum], absolute_sigma=True)
+    else:
+        mod, cov = curve_fit(fun_fit, x[xmask_continuum], flux[xmask_continuum], p0=[p1[0], p1[1], p1[2], p1[3], p1[4]], sigma=None)
+        
     min_lin, max_lin = mod[2] - 3*mod[3], mod[2] + 3*mod[3]
     min_cont, max_cont = mod[2] - 5*mod[3], mod[2] + 5*mod[3]
     limits_ = np.array([min_cont, min_lin, max_lin, max_cont])
@@ -139,11 +139,12 @@ def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, ga
         return a*x+b
     
     limits_ = np.array([min_cont, min_lin, max_lin, max_cont])
+    #print(limits_)
     xmask_contForFit = (x >= min_cont)*(x<=min_lin) + (x<=max_cont)*(x>=max_lin)
     if sigma_flux is not None:
-		contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init, sigma=sigma_flux)
-	else:
-		contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init, sigma=None)
+        contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init, sigma=sigma_flux[xmask_contForFit], absolute_sigma=True)
+    else:
+        contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init, sigma=None)
     
     def continuum(x):
         return contMod[0]*x+contMod[1]
@@ -154,12 +155,12 @@ def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, ga
     xline0 = x[mask_for_fit]
     fline0 = flux[mask_for_fit]
     if sigma_flux is not None:
-		fline_err0 = sigma_flux[mask_for_fit]
+        fline_err0 = sigma_flux[mask_for_fit]
     
     xline = x[xmask_continuum]
     fline = flux[xmask_continuum]
     if sigma_flux is not None:
-		fline_err = sigma_flux[xmask_continuum]
+        fline_err = sigma_flux[xmask_continuum]
     xmask_line = (xline>=min_lin)*(xline<=max_lin)
     xline_model = xline[xmask_line]
     
@@ -202,10 +203,10 @@ def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, ga
     cont_err_ = continuum_error(o2_band_centre, sigma_a, sigma_b)
     #print(cont_err_)
     if sigma_flux is not None:
-		area_ul_err_ = area_ul_error(fline_err[xmask_line]/continuum(norm_array[xmask_line]), xline_model)
-	else:
-		area_ul_err_ = area_ul_error(np.ones_like(xline_model)*0.02, xline_model) ## default 2% error to ensure that the code runs
-		
+        area_ul_err_ = area_ul_error(fline_err[xmask_line]/continuum(norm_array[xmask_line]), xline_model)
+    else:
+        area_ul_err_ = area_ul_error(np.ones_like(xline_model)*0.02, xline_model) ## default 2% error to ensure that the code runs
+        
     #print(area_ul_err_)
     
     area_l_err_ = area_l_error(area_c_err, area_ul_err_)
@@ -271,37 +272,51 @@ def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, ga
         return eqw, sigmaBand, eqw_err_, area_c_err, cont_err_, area_ul_err_, area_l_err_
         
 def simAtmEqw(airmasses, pressures, wl_min=700., wl_max=800., wl_mid=761.0, lims=None, pwv=0.0, oz=300.0, atm='us', inter='sa', clouds=0.0, flagVerbose=False):
-	'''
-	airmasses and pressures must be 1D-lists with the same length.
-	Returns the equivalent widths and associated errors for the specified atmosphere(s) (possibility to use "all")
-	For each couple of values : airmass, pressure.
-	The result is returned as a list of arrays : - dimension along axis 0 equals len(returned list)=len(airmasses)=len(pressures)
-	                                             - dimension along axis 1 equals the number of atmospheres (1 or 6 if "all" is specified) -- array axis 0
-	                                             - dimension along axis 2 equals 3 : atmosphere name, eq. width, eq. width error -- array axis 1
-	                                             
+    '''
+    airmasses and pressures must be 1D-lists with the same length.
+    Returns the equivalent widths and associated errors for the specified atmosphere(s) (possibility to use "all")
+    For each couple of values : airmass, pressure.
+    The result is returned as a list of arrays : - dimension along axis 0 equals len(returned list)=len(airmasses)=len(pressures)
+                                                 - dimension along axis 1 equals the number of atmospheres (1 or 6 if "all" is specified) -- array axis 0
+                                                 - dimension along axis 2 equals 3 : atmosphere name, eq. width, eq. width error -- array axis 1
+                                                 
     DEFAULT VALUES ARE FOR THE O2 ABSORPTION BAND OF THE ATMOSPHERE (test case of this program)
-	'''
-	results_am_press = []
-	for am, press in zip(airmasses, pressures):
-		outpaths, outfiles = libsimulateVisible.ProcessSimulation(am, pwv, oz, press, prof_str=atm, proc_str=inter, cloudext=clouds, FLAG_VERBOSE=flagVerbose)
-		filepaths = [ os.path.join(path_, file_) for path_, file_ in zip(outpaths, outfiles) ]
-		eqws = []
-		atms = []
-		eqwErrs = []
-		for dataFile in filepaths:
-			data = np.loadtxt(dataFile)
-			atmType = dataFile.split('/')[-5]
-			print(atmType)
-			wl = data[:,0]
-			transm = data[:,1]
-			gaussMod, gaussCov, gaussLimits = fit_gaussian(wl, transm, wl_min, wl_max, central_lambda=wl_mid)
-			eqw_, sigmaBand_, eqwErr_, areaC_err , cont_err_, areaUL_err_, areaL_err_= eqw_norm(wl, transm, wl_min, wl_max, central_lambda=gaussMod[2], gaussMod_band=gaussMod, limits=lims, fit_band=False, return_fit=False, make_plot=False)
-			eqws.append(eqw_)
-			eqwErrs.append(eqwErr_)
-			atms.append(atmType)
-		eqwArr = np.column_stack((atms, eqws, eqwErrs))
-		results_am_press.append(eqwArr)
-	return results_am_press
+    '''
+    results_am_press = []
+    for am, press in zip(airmasses, pressures):
+        outpaths, outfiles = libsimulateVisible.ProcessSimulation(am, pwv, oz, press, prof_str=atm, proc_str=inter, cloudext=clouds, FLAG_VERBOSE=flagVerbose)
+        filepaths = [ os.path.join(path_, file_) for path_, file_ in zip(outpaths, outfiles) ]
+        eqws = []
+        atms = []
+        eqwErrs = []
+        for dataFile in filepaths:
+            data = np.loadtxt(dataFile)
+            atmType = dataFile.split('/')[-5]
+            print(atmType)
+            wl = data[:,0]
+            transm = data[:,1]
+            gaussMod, gaussCov, gaussLimits = fit_gaussian(wl, transm, wl_min, wl_max, central_lambda=wl_mid)
+            eqw_, sigmaBand_, eqwErr_, areaC_err , cont_err_, areaUL_err_, areaL_err_= eqw_norm(wl, transm, wl_min, wl_max, central_lambda=gaussMod[2], gaussMod_band=gaussMod, limits=lims, fit_band=False, return_fit=False, make_plot=False)
+            eqws.append(eqw_)
+            eqwErrs.append(eqwErr_)
+            atms.append(atmType)
+        eqwArr = np.column_stack((atms, eqws, eqwErrs))
+        results_am_press.append(eqwArr)
+    return results_am_press
+    
+def chi_squared(fmod, x, y, yerr=None, reduced=False):
+    if yerr is None:
+        weights = np.ones_like(y)
+    else:
+        weights = np.power(yerr, -2.0)
+    chi2 = np.sum(np.power(y-fmod(x), 2.0) * weights)
+    if reduced:
+        chi2 = chi2 / len(x) ## here we take Number of Degrees of Freedom = len(x) instead of len(x)-(number of parameters of the model fmod).
+                             ## i.e. it is assumed that there are much more data points than parameters to optimise in fmod
+                             ## typical usage is fmod is a line (2 parameters : slope and intercept) or a low-degree polynomial and x contains several tens or even hundreds or more data points.
+                             ## in case of doubt : use with reduced = False and compute accurately the number of DoF and the reduced chi² outside this function.
+    return chi2
+    
 
 def main(args):
     return 0
