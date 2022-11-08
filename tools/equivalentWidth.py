@@ -233,8 +233,6 @@ def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, ga
         axs[0].axvline(x=min_cont,color='r',ls='--', label="5 sigma : boundaries of the model")
         axs[0].axvline(x=max_cont,color='r',ls='--')
         axs[0].fill_between(xline, continuum(xline), fline, color='gray',alpha=0.2, label="Ref. surface")
-        #axs[0].fill_between(xline_model[eqwmask], continuum(xline_model[eqwmask]), color='cyan', alpha=0.2, label="Rectangle of EQW")
-        #axs[0].fill_between(xline_model, continuum(xline_model), spec_mod(xline_model), color='gray',alpha=0.2, label="Ref. surface")
         axs[0].fill_between(xline_model[eqwmask], continuum(xline_model[eqwmask]), color='cyan', alpha=0.2, label="Rectangle of EQW")
         axs[1].set_xlabel(r'$\lambda \, [nm]$',fontsize=12)
         axs[0].set_ylabel(r'$\gamma \, [s \cdot cm^2 \cdot nm]$',fontsize=12)
@@ -251,8 +249,6 @@ def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, ga
         axs[1].axvline(x=max_cont,color='r',ls='--')
         axs[1].axvline(x=o2_band_centre,color='k',ls=':', label="O2 line center")
         axs[1].fill_between(xline, normed_cont(xline), fline/norm_array, color='gray',alpha=0.2, label="Ref. surface")
-        #axs[1].fill_between(xline_model[eqwmask], normed_cont(xline_model[eqwmask]), color='cyan', alpha=0.2, label="Rectangle of EQW")
-        #axs[1].fill_between(xline_model, normed_cont(xline_model), normed_spec(xline_model), color='gray',alpha=0.2, label="Ref. surface")
         axs[1].fill_between(xline_model[eqwmask], normed_cont(xline_model[eqwmask]), color='cyan', alpha=0.2, label="Rectangle of EQW")
         axs[1].set_xlabel(r'$\lambda \, [nm]$',fontsize=12)
         axs[1].set_ylabel(r'$\gamma \, / continuum [-]$',fontsize=12)
@@ -283,6 +279,7 @@ def simAtmEqw(airmasses, pressures, wl_min=700., wl_max=800., wl_mid=761.0, lims
     DEFAULT VALUES ARE FOR THE O2 ABSORPTION BAND OF THE ATMOSPHERE (test case of this program)
     '''
     results_am_press = []
+    log_files = []
     for am, press in zip(airmasses, pressures):
         outpaths, outfiles = libsimulateVisible.ProcessSimulation(am, pwv, oz, press, prof_str=atm, proc_str=inter, cloudext=clouds, FLAG_VERBOSE=flagVerbose)
         filepaths = [ os.path.join(path_, file_) for path_, file_ in zip(outpaths, outfiles) ]
@@ -290,9 +287,11 @@ def simAtmEqw(airmasses, pressures, wl_min=700., wl_max=800., wl_mid=761.0, lims
         atms = []
         eqwErrs = []
         for dataFile in filepaths:
+            if flagVerbose:
+                log_files.append(os.path.join(datafile,'_verbose.txt'))
             data = np.loadtxt(dataFile)
             atmType = dataFile.split('/')[-5]
-            print(atmType)
+            #print(atmType)
             wl = data[:,0]
             transm = data[:,1]
             gaussMod, gaussCov, gaussLimits = fit_gaussian(wl, transm, wl_min, wl_max, central_lambda=wl_mid)
@@ -302,7 +301,30 @@ def simAtmEqw(airmasses, pressures, wl_min=700., wl_max=800., wl_mid=761.0, lims
             atms.append(atmType)
         eqwArr = np.column_stack((atms, eqws, eqwErrs))
         results_am_press.append(eqwArr)
-    return results_am_press
+    if not flagVerbose:
+        return results_am_press
+    else:
+        return results_am_press, log_files
+
+def bin_data(airmasses, pressures, am_step=0.2):
+    '''
+    Function to bin the data and compute the mean and deviation of the bins.
+    Returns arrays with am mean, am deviation, pressure mean and pressure deviation of length the number of bins.
+    Also returns the am bins boundaries and counts in each bin.
+    Because of how libradtran works, step may exceed, but not be lower to, 0.1nm in airmass. Default is 0.2
+    '''
+    am_min, am_max = min(np.around(np.amin(airmasses), 1)-am_step, 1.0), np.around(np.amax(airmasses), 1)+2*am_step #libradtran creates files with .1 precision in airmass
+    am_bins = np.arange(am_min, am_max, am_step)
+    am_counts, am_boundaries = np.histogram(airmasses, bins=am_bins, range=(am_min, am_max))
+    am_mean, am_dev, press_mean, press_dev = np.empty_like([]), np.empty_like([]), np.empty_like([]), np.empty_like([])
+    for am_inf, am_sup, count in zip(am_boundaries[:-1], am_boundaries[1:], am_counts):
+        am_mask = (airmasses>=am_inf)*(airmasses<am_sup)
+        am_mean = np.append(am_mean, np.mean(airmasses[am_mask]))
+        am_dev = np.append(am_dev, np.std(airmasses[am_mask]))
+        press_mean = np.append(press_mean, np.mean(pressures[am_mask]))
+        press_dev = np.append(press_dev, np.std(pressures[am_mask]))
+    return am_boundaries, am_counts, am_mean, am_dev, press_mean, press_dev
+        
     
 def chi_squared(fmod, x, y, yerr=None, reduced=False):
     if yerr is None:

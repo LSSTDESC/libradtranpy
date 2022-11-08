@@ -3,7 +3,7 @@ import scipy
 import numpy as np
 from scipy.optimize import leastsq
 home = os.environ['HOME']
-from subprocess import Popen,PIPE, STDOUT, call
+from subprocess import Popen, PIPE, STDOUT, call, DEVNULL
 
 class UVspec:
     def __init__(self,home=''):
@@ -30,7 +30,7 @@ class UVspec:
         self.run(input,output,verbose)
         return
             
-    def run(self,inp, out, verbose,path=''):
+    def run(self, inp, out, verbose, path=''):
         if verbose:
             print("Running uvspec with input file: ", inp)
             print("Output to file                : ", out)
@@ -43,6 +43,7 @@ class UVspec:
             print("uvspec cmd: ", cmd)
 #        p   = call(cmd,shell=True,stdin=PIPE,stdout=PIPE)
         p   = Popen(cmd,shell=True,stdout=PIPE)
+        #p = Popen(cmd,shell=False,stdout=PIPE)
         p.wait()
 
 def peval(x, p):
@@ -191,11 +192,13 @@ def run(inp, out, verbose):
         print("Running uvspec with input file: ", inp)
         print("Output to file                : ", out)
         log=out+'_verbose.txt'
-    cmd = home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out
-    #cmd ='('+ home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out +')>&'+log
-    #print cmd
-    #    p   = Popen(cmd,shell=True,stdin=PIPE,stdout=PIPE)
-    p   = call(cmd,shell=True,stdin=PIPE,stdout=PIPE)
+        cmd ='('+ home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out +')>&'+log
+    else:
+        cmd = home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out
+    print(cmd)
+    p = Popen(cmd,shell=True,stdin=PIPE,stdout=PIPE)
+    #p = Popen(cmd,shell=False,stdin=PIPE,stdout=PIPE)
+    #p   = call(cmd,shell=True,stdin=PIPE,stdout=PIPE)
 
 
 def mW2photons(wavelength,radiation):
