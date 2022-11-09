@@ -339,6 +339,40 @@ def chi_squared(fmod, x, y, yerr=None, reduced=False):
                              ## in case of doubt : use with reduced = False and compute accurately the number of DoF and the reduced chi² outside this function.
     return chi2
     
+def read_atm(verbose_file, start_line=66, end_line=113):
+    num, alt_km, press_hPa, temp_K, air_cm3, oz_cm3, o2_cm3, wv_cm3, co2_cm3, no2_cm3, o4_cm3 =\
+    np.empty_like([]), np.empty_like([]), np.empty_like([]), np.empty_like([]), np.empty_like([]), np.empty_like([]),\
+    np.empty_like([]), np.empty_like([]), np.empty_like([]), np.empty_like([]), np.empty_like([])
+
+    with open(verbose_file,'r') as logfile:
+        atmTable=logfile.readlines()[start_line-1:end_line]
+    for line in atmTable:
+        vals=line.split()
+        num=np.append(num,float(vals[0]))
+        alt_km=np.append(alt_km, float(vals[1]))
+        press_hPa=np.append(press_hPa, float(vals[2]))
+        temp_K=np.append(temp_K, float(vals[3]))
+        air_cm3=np.append(air_cm3, float(vals[4]))
+        oz_cm3=np.append(oz_cm3, float(vals[5]))
+        o2_cm3=np.append(o2_cm3, float(vals[6]))
+        wv_cm3=np.append(wv_cm3, float(vals[7]))
+        co2_cm3=np.append(co2_cm3, float(vals[8]))
+        no2_cm3=np.append(no2_cm3, float(vals[9]))
+        o4_cm3=np.append(o4_cm3, float(vals[10]))
+    d = {'Number': num,\
+        'Altitude': alt_km,\
+        'Pressure': press_hPa,\
+        'Temperature': temp_K,\
+        'Air density': air_cm3,\
+        'Ozone density': oz_cm3,\
+        'Dioxygene density': o2_cm3,\
+        'Water vapor density': wv_cm3,\
+        'Carbon dioxyde density': co2_cm3,\
+        'Azote dioxyde density': no2_cm3,\
+        'Oxozone density': o4_cm3}
+    atmos = pd.DataFrame(data=d)
+    return atmos
+    
 
 def main(args):
     return 0

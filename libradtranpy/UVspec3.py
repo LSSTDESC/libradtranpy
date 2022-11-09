@@ -39,12 +39,17 @@ class UVspec:
             cmd = path+'bin/uvspec '+  ' < ' + inp  +  ' > ' + out
         else:
             cmd = self.home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out
-        if verbose:
-            print("uvspec cmd: ", cmd)
-#        p   = call(cmd,shell=True,stdin=PIPE,stdout=PIPE)
-        p   = Popen(cmd,shell=True,stdout=PIPE)
-        #p = Popen(cmd,shell=False,stdout=PIPE)
+        #if verbose:
+        print("uvspec cmd: ", cmd)
+        logfile = open(out+"_verbose.txt",'w')
+        p = Popen(cmd, shell=True, stdout=PIPE, stderr=logfile)
+        #else:
+            #print("uvspec cmd: ", cmd)
+            #p = Popen(cmd, shell=True, stdout=PIPE)
+#        p   = call(cmd, shell=True, stdin=PIPE, stdout=PIPE)
         p.wait()
+        #if verbose: logfile.close()
+        
 
 def peval(x, p):
     return p[0] + p[1]*x + p[2]*x*x  + p[3]*x**3  # + p[4]*x**4 +p[5]*x**5 +p[6]*x**6 +p[7]*x**7 
@@ -192,9 +197,9 @@ def run(inp, out, verbose):
         print("Running uvspec with input file: ", inp)
         print("Output to file                : ", out)
         log=out+'_verbose.txt'
-        cmd ='('+ home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out +')>&'+log
-    else:
-        cmd = home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out
+        #cmd ='('+ home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out +')>&'+log
+    #else:
+    cmd = home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out
     print(cmd)
     p = Popen(cmd,shell=True,stdin=PIPE,stdout=PIPE)
     #p = Popen(cmd,shell=False,stdin=PIPE,stdout=PIPE)
