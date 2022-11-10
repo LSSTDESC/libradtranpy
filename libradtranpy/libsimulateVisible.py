@@ -613,7 +613,7 @@ def ProcessSimulationFine(airmass_num,pwv_num,oz_num,press_num,prof_str='us',pro
         atmkey=atmosphere_map[atmosphere]
        
         # manage input and output directories and vary the ozone
-        TOPDIR2=TOPDIR+'/'+Rte+'/'+atmkey+'/'+Proc+'/'+Mod
+        TOPDIR2=TOPDIR+'/'+Rte+'/'+atmkey+'/'+Proc+'/'+Mod+'_fine'
         ensure_dir(TOPDIR2)
         INPUTDIR=TOPDIR2+'/'+'in'
         ensure_dir(INPUTDIR)
