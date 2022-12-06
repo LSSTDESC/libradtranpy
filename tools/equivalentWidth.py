@@ -53,6 +53,7 @@ import pandas as pd
 from scipy.optimize import curve_fit
 from scipy.integrate import quad
 from scipy.stats import norm
+from scipy.interpolate import interp1d
 import pickle
 
 from libradtranpy import libsimulateVisible
@@ -97,7 +98,8 @@ def fit_gaussian(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None
     return mod, cov, limits_
 
 
-def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, gaussMod_band=None, limits=None, fit_band=True, return_fit=False, make_plot=True, plot_name='test.png'): 
+def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, gaussMod_band=None, limits=None,\
+                naive=True, fit_band=True, return_fit=False, make_plot=True, plot_name='test.png'): 
     
     def continuum_error(l0, sigma_a, sigma_b):
         return np.sqrt( np.power(sigma_a*l0, 2.) + np.power(sigma_b, 2.) )
@@ -114,40 +116,72 @@ def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, ga
         return np.sqrt(sigma2_eqw)
     
     if gaussMod_band is None:
-        fit_band=True
-    
-    if fit_band:
-        gaussMod_band, cov, lims = fit_gaussian(x, flux, abs_min, abs_max, sigma_flux, central_lambda)
-        init=[gaussMod_band[0], gaussMod_band[1]]
-        o2_band_centre = gaussMod_band[2]
-        sigmaBand = gaussMod_band[3]
-        kBand = gaussMod_band[4]
-        min_cont, min_lin, max_lin, max_cont = lims[0], lims[1], lims[2], lims[3]
-        #delta_line = np.sqrt(cov[2,2])
-    else:
-        o2_band_centre = gaussMod_band[2]
-        sigmaBand = gaussMod_band[3]
-        kBand = gaussMod_band[4]
-        if limits is None:
-            min_lin, max_lin = o2_band_centre - 3*sigmaBand, o2_band_centre + 3*sigmaBand
-            min_cont, max_cont = o2_band_centre - 5*sigmaBand, o2_band_centre + 5*sigmaBand
+        naive=True
+    if limits is None:
+        naive=False
+        
+    if naive:
+        min_cont, min_lin, max_lin, max_cont = limits[0], limits[1], limits[2], limits[3]
+        xmask_contForFit = (x >= min_cont)*(x<=min_lin) + (x<=max_cont)*(x>=max_lin)
+        continuum = interp1d( x[xmask_contForFit], flux[xmask_contForFit],\
+                            fill_value = (flux[xmask_contForFit][0], flux[xmask_contForFit][-1]),\
+                            bounds_error=False )
+        if central_lambda is not None:
+            o2_band_centre = central_lambda
         else:
-            min_cont, min_lin, max_lin, max_cont = limits[0], limits[1], limits[2], limits[3]
-        init = [ (flux[-1]-flux[0]) / (x[-1]-x[0]), flux[0] - ( (flux[-1]-flux[0]) / (x[-1]-x[0]) )*x[0] ]
-    
-    def lin_fun(x, a, b):
-        return a*x+b
-    
-    limits_ = np.array([min_cont, min_lin, max_lin, max_cont])
-    #print(limits_)
-    xmask_contForFit = (x >= min_cont)*(x<=min_lin) + (x<=max_cont)*(x>=max_lin)
-    if sigma_flux is not None:
-        contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init, sigma=sigma_flux[xmask_contForFit], absolute_sigma=True)
+            o2_band_centre = x[xmask_contForFit][ np.where( flux[xmask_contForFit] == np.min(flux[xmask_contForFit]) )[0] ]
+        
+        sigmaBand = 0.5*((max_lin-min_lin)/6 + (max_cont-min_cont)/10)
+        
+        mask_for_band = (x >= min_lin) * (x <= max_lin)
+        spec_mod = interp1d( x[mask_for_band], flux[mask_for_band],\
+                            fill_value = (flux[mask_for_band][0], flux[mask_for_band][-1]),\
+                            bounds_error=False )
+        def normed_spec(x):
+            return spec_mod(x) / continuum(x)
+        limits_ = np.array([min_cont, min_lin, max_lin, max_cont])
+
     else:
-        contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init, sigma=None)
+        if fit_band:
+            gaussMod_band, cov, lims = fit_gaussian(x, flux, abs_min, abs_max, sigma_flux, central_lambda)
+            init=[gaussMod_band[0], gaussMod_band[1]]
+            o2_band_centre = gaussMod_band[2]
+            sigmaBand = gaussMod_band[3]
+            kBand = gaussMod_band[4]
+            min_cont, min_lin, max_lin, max_cont = lims[0], lims[1], lims[2], lims[3]
+            #delta_line = np.sqrt(cov[2,2])
+        else:
+            o2_band_centre = gaussMod_band[2]
+            sigmaBand = gaussMod_band[3]
+            kBand = gaussMod_band[4]
+            if limits is None:
+                min_lin, max_lin = o2_band_centre - 3*sigmaBand, o2_band_centre + 3*sigmaBand
+                min_cont, max_cont = o2_band_centre - 5*sigmaBand, o2_band_centre + 5*sigmaBand
+            else:
+                min_cont, min_lin, max_lin, max_cont = limits[0], limits[1], limits[2], limits[3]
+            init = [ (flux[-1]-flux[0]) / (x[-1]-x[0]), flux[0] - ( (flux[-1]-flux[0]) / (x[-1]-x[0]) )*x[0] ]
+        
+        def lin_fun(x, a, b):
+            return a*x+b
+        
+        limits_ = np.array([min_cont, min_lin, max_lin, max_cont])
+        #print(limits_)
+        xmask_contForFit = (x >= min_cont)*(x<=min_lin) + (x<=max_cont)*(x>=max_lin)
+        if sigma_flux is not None:
+            contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init, sigma=sigma_flux[xmask_contForFit], absolute_sigma=True)
+        else:
+            contMod, cov = curve_fit(lin_fun, x[xmask_contForFit], flux[xmask_contForFit], p0=init, sigma=None)
+        
+        def continuum(x):
+            return contMod[0]*x+contMod[1]
+        
+        def spec_mod(x):
+            o2abs = norm(loc=o2_band_centre, scale=sigmaBand)
+            return continuum(x)-kBand*o2abs.pdf(x)
+        
+        def normed_spec(x):
+            return spec_mod(x) / continuum(x)
     
-    def continuum(x):
-        return contMod[0]*x+contMod[1]
 
     xmask_continuum = (x>=min_cont)*(x<=max_cont)
 
@@ -164,16 +198,11 @@ def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, ga
     xmask_line = (xline>=min_lin)*(xline<=max_lin)
     xline_model = xline[xmask_line]
     
-    def spec_mod(x):
-        o2abs = norm(loc=o2_band_centre, scale=sigmaBand)
-        return continuum(x)-kBand*o2abs.pdf(x)
-    
-    fline_model = spec_mod(xline_model)
+    if not naive:
+        fline_model = spec_mod(xline_model)
     
     def normed_cont(x): ## must return 1.
         return continuum(x) / continuum(x)
-    def normed_spec(x):
-        return spec_mod(x) / continuum(x)
     
     norm_array = continuum(xline)
     
@@ -192,9 +221,12 @@ def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, ga
     cont_min = continuum(o2_band_centre)
     eqw = area_l #/cont_min
     #print('EQW = ',eqw)
-        
-    sigma_a = np.sqrt(cov[0,0])
-    sigma_b = np.sqrt(cov[1,1])
+    
+    if naive:
+        sigma_a, sigma_b = 0.02, 0.02
+    else:
+        sigma_a = np.sqrt(cov[0,0])
+        sigma_b = np.sqrt(cov[1,1])
     
     #print(cont_min)
     #print(area_l)
@@ -267,7 +299,7 @@ def eqw_norm(x, flux, abs_min, abs_max, sigma_flux=None, central_lambda=None, ga
     else:
         return eqw, sigmaBand, eqw_err_, area_c_err, cont_err_, area_ul_err_, area_l_err_
         
-def simAtmEqw(airmasses, pressures, wl_min=700., wl_max=800., wl_mid=761.0, lims=None, pwv=0.0, oz=300.0, atm='us', inter='sa', clouds=0.0, flagVerbose=False):
+def simAtmEqw(airmasses, pressures, wl_min=700., wl_max=800., wl_mid=761.0, lims=None, pwv=0.0, oz=300.0, mod='', atm='us', inter='sa', clouds=0.0, flagVerbose=False):
     '''
     airmasses and pressures must be 1D-lists with the same length.
     Returns the equivalent widths and associated errors for the specified atmosphere(s) (possibility to use "all")
@@ -280,6 +312,8 @@ def simAtmEqw(airmasses, pressures, wl_min=700., wl_max=800., wl_mid=761.0, lims
     '''
     results_am_press = []
     log_files = []
+    if not mod == '':
+        libsimulateVisible.Mod = mod
     for am, press in zip(airmasses, pressures):
         outpaths, outfiles = libsimulateVisible.ProcessSimulation(am, pwv, oz, press, prof_str=atm, proc_str=inter, cloudext=clouds, FLAG_VERBOSE=flagVerbose)
         filepaths = [ os.path.join(path_, file_) for path_, file_ in zip(outpaths, outfiles) ]
