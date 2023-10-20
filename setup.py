@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
    name='libradtranpy',
-   version='0.1.0',
+   version='0.2.0',
    author='Sylvie Dagoret-Campagne',
    author_email='sylvie.dagoret-campagne@ijclab.in2p3.fr',
    packages=['libradtranpy', 'test'],
