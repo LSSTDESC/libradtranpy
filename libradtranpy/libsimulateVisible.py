@@ -107,11 +107,11 @@ def usage():
     print(' \t - v   : activate libradtran output verbose mode')
     
     print('\t Examples : ')
-    print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -s \'LSST\'')
-    print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -c 0 -p 742 -m \'us\' -q \'sa\' -s\'LSST\'')
+    print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -s LSST')
+    print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -c 0 -p 742 -m us -q sa -s LSST')
     
     print('\t To generate ascii printout of the used atmospheric model tables in a log file :')
-    print('\t \t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 -s \'LSST\'>& output.log')
+    print('\t \t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -s LSST >& output.log')
     
     print('\t Actually provided : ')
     print('\t \t Number of arguments:', len(sys.argv), 'arguments.')
@@ -138,7 +138,7 @@ def usageaer():
     print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -a 0.3 -c 0 -p 742 -m us -q sa -s LSST')
     
     print('\t To generate ascii printout of the used atmospheric model table in a log file :')
-    print('\t \t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 -s LSST >& output.log')
+    print('\t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -s LSST >& output.log')
     #python libsimulateVisible.py -v -z 1 -w 0 -o 0 -s LSST >& output.log
 
     print('\t Actually provided : ')
