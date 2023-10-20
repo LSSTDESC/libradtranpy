@@ -18,6 +18,7 @@ import sys,getopt
 
 from libradtranpy import UVspec3
 
+libradtranvers = "2.0.5"
 FLAG_DEBUG = False
 
 # Definitions and configuration
@@ -61,7 +62,8 @@ Dict_Of_sitesAltitudes = {'LSST':2.663,
 
 
 # july 2023 libradtran version
-TOPDIR='simulations/RT/2.0.5/LS'
+TOPTOPDIR=f"simulations/RT/{libradtranvers}/"
+
 
 
 
@@ -190,8 +192,12 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     -- FLAG_VERBOSE : flag to activate verbose mode
     
     Returns:
-     -- return OUTPUTDIR,outputFilename : path and filename of datafile containing the simulated data
+     -- return OUTPUTDIR,outputFilename : path and filename of datafile containing the simulated data     
     """
+
+    
+
+
 
     if FLAG_DEBUG:
         print('--------------- ProcessSimulation -----------------------------')
@@ -220,6 +226,8 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     if FLAG_DEBUG:
         print(f"Observation site altitude for libradran sim : {OBS_Altitude} km")
     
+   
+
 
     # set the interaction process
     
@@ -231,6 +239,8 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     if prof_str in ["us","ms","mw","tp","ss","sw"]:
         Atm=[prof_str]
    
+    # create output dir
+    TOPDIR = os.path.join(TOPTOPDIR,altitude_str)
     ensure_dir(TOPDIR)
 
 
@@ -475,6 +485,8 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     returns:
     -- return OUTPUTDIR,outputFilename : path and filename of datafile containing the simulated data
     """
+
+    
  
     if FLAG_DEBUG:
         print('------------- ProcessSimulationaer -------------------------------')
@@ -513,6 +525,8 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     if prof_str in ["us","ms","mw","tp","ss","sw"]:
         Atm=[prof_str]
     
+    # create output dir
+    TOPDIR = os.path.join(TOPTOPDIR,altitude_str)
     ensure_dir(TOPDIR)
 
     
