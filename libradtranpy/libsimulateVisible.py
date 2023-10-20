@@ -1280,7 +1280,7 @@ if __name__ == "__main__":
     # airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0
     
     # No aerosol, just call function ProcessSimulation()
-    if AerosolTest_Flag==False:
+    if AerosolTest_Flag == False:
         try:
             opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:p:c:m:q:s:",["z=","w=","o=","p=","c=","m=","q=","s="])
         except getopt.GetoptError:
