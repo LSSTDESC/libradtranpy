@@ -5,7 +5,7 @@
 # Here we vary PWV
 # author: sylvielsstfr
 # creation date : November 2nd 2016
-# last update : October 2022
+# last update : October 20th 2023
 #
 #################################################################
 import os
@@ -47,26 +47,21 @@ AEXX='aer'
 AEXX2='aer2'
 CLD="cld"
 
+# Rubin-LSST altitude from https://en.wikipedia.org/wiki/Vera_C._Rubin_Observatory
+# altitude has been reduced from 2.75 km to  2.663 km     
 
-LSST_Altitude = 2.750  # in k meters from astropy package (Cerro Pachon)
-OBS_Altitude = str(LSST_Altitude)
-
-
-#CTIO_Altitude = 2.200  # in k meters from astropy package (Cerro Pachon)
-#OBS_Altitude = str(CTIO_Altitude)
-
-#OHP_Altitude = 0.65   # in km
-#OBS_Altitude=str(OHP_Altitude)
-
-#PDM_Altitude= 2.8905 # in km
-#OBS_Altitude=str(PDM_Altitude)
+# preselected sites 
+Dict_Of_sitesAltitudes = {'LSST':2.663,
+                          'CTIO':2.207,
+                          'OHP':0.65,
+                          'PDM':2.8905,
+                          'OMK':4.205,
+                          'OSL':0,
+                           }
 
 
-#MPL_Altitude = 0.  # in kilo meters
-#OBS_Altitude = str(MPL_Altitude)
-
-
-TOPDIR='simulations/RT/2.0.3/LS'
+# july 2023 libradtran version
+TOPDIR='simulations/RT/2.0.5/LS'
 
 
 
@@ -87,8 +82,6 @@ def usage0():
     print(sys.argv[0],' -z <airmass> -w <pwv> -o <oz>')
     print('Number of arguments:', len(sys.argv), 'arguments.')
     print('Argument List:', str(sys.argv))
-    
-    
     print("*******************************************************************")
     
 def usageaer():
@@ -96,15 +89,13 @@ def usageaer():
     print(sys.argv[0],' -z <airmass> -w <pwv> -o <oz> -l <wl> -t <tau>')
     print('Number of arguments:', len(sys.argv), 'arguments.')
     print('Argument List:', str(sys.argv))
-    
-    
     print("*******************************************************************")
 
 
 
 def usage():
     print("*******************************************************************")
-    print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -p <P> -c <cld> -m<mod> -q<proc>')
+    print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -p <P> -c <cld> -m<mod> -q<proc> -s<site-string> -v<verbose-flag>')
     print(' \t - z   : airmass from 1.0 to 3.0, typical z=1 ')
     print(' \t - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm')
     print(' \t - oz  : ozone in Dobson units from 200 DU to 400 DU')
@@ -112,15 +103,15 @@ def usage():
     print(' \t - c   : Cloud vertical optical depth, typical c=0')
     print(' \t - m   : Atmospheric model, typical m=\'us\' ')
     print(' \t - q   : Interaction processes, typical q=\'sa\' for scattering and absorption')
-    print(' \t - v   : activate verbose to get atmospheric profile')
-    
+    print(' \t - s   : provide site or altitude as a string : LSST/OHP/PDM/OMK/OSL or altitude in km like akm_2.663')
+    print(' \t - v   : activate libradtran output verbose mode')
     
     print('\t Examples : ')
-    print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0')
-    print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -c 0 -p 742 -m \'us\' -q \'sa\'')
+    print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -s \'LSST\'')
+    print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -c 0 -p 742 -m \'us\' -q \'sa\' -s\'LSST\'')
     
     print('\t To generate ascii printout of the used atmospheric model tables in a log file :')
-    print('\t \t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 >& output.log')
+    print('\t \t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 -s \'LSST\'>& output.log')
     
     print('\t Actually provided : ')
     print('\t \t Number of arguments:', len(sys.argv), 'arguments.')
@@ -130,7 +121,7 @@ def usage():
     
 def usageaer():
     print("*******************************************************************")
-    print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc>')
+    print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc> -s<altitude> -v<verbose-flag>')
     print(' \t - z   : airmass from 1.0 to 3.0, typical z=1 ')
     print(' \t - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm')
     print(' \t - oz  : ozone in Dobson units from 200 DU to 400 DU')
@@ -139,14 +130,15 @@ def usageaer():
     print(' \t - c   : Cloud vertical optical depth, typical c=0')
     print(' \t - m   : Atmospheric model, typical m=\'us\' ')
     print(' \t - q   : Interaction processes, typical q=\'sa\' for scattering and absorption')
-    print(' \t - v   : activate verbose to get atmospheric profile')
+    print(' \t - s   : provide site or altitude : LSST/OHP/PDM/OMK/PDM or altitude in km like akm_2.663')
+    print(' \t - v   : activate libradtran output verbose to get atmospheric profile')
    
     print('\t Examples : ')
-    print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0')
-    print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -a 0.3 -c 0 -p 742 -m \'us\' -q \'sa\'')
+    print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0 -s \'LSST\'')
+    print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -a 0.3 -c 0 -p 742 -m \'us\' -q \'sa\' -s \'LSST\'')
     
     print('\t To generate ascii printout of the used atmospheric model table in a log file :')
-    print('\t \t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 >& output.log')
+    print('\t \t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 -s \'LSST\'>& output.log')
     
     print('\t Actually provided : ')
     print('\t \t Number of arguments:', len(sys.argv), 'arguments.')
@@ -179,7 +171,7 @@ def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
 #-----------------------------------------------------------------------------
 
 
-def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
+def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, altitude_str ="LSST",FLAG_VERBOSE=False):
     """
     ProcessSimulation(airmass_num,pwv_num,oz_num) 
     Function to simulate air transparency.
@@ -193,6 +185,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     -- prof_str : string defining the type of atmosphere
     -- proc_str : processing string defining the processes
     -- cloudext : cloud depth
+    -- altitude : string on the altitude (either the site name abrebiation (LSST/CTIO,OMP,OMK,MSL) or the string on altitude like akm_2.663)
     -- FLAG_VERBOSE : flag to activate verbose mode
     
     Returns:
@@ -208,8 +201,25 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         print(' 5) atmospheric profile = ',prof_str)
         print(' 6) interaction processes = ',proc_str)
         print(' 7) cloud extinction = ',cloudext)
+        print(' 8) site or altitude = ', altitude_str)
         print('--------------------------------------------')
    
+   
+    # altitude workaround
+    if Dict_Of_sitesAltitudes.get(altitude_str):
+        altitude_num = Dict_Of_sitesAltitudes[altitude_str]
+    elif altitude_str[:4] == "akm_":
+        altitude_num = float(altitude_str[4:])
+    else:
+        raise Exception(f"Bad altitude/site string {altitude_str}")
+        altitude_num = Dict_Of_sitesAltitudes['LSST']
+
+    OBS_Altitude = altitude_num
+
+    if FLAG_DEBUG:
+        print(f"Observation site altitude for libradran sim : {OBS_Altitude} km")
+    
+
     # set the interaction process
     
     #Proc='sa'  # Pure absorption and Rayleigh scattering : Clear sky without aerosols
@@ -222,14 +232,12 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
    
     ensure_dir(TOPDIR)
 
-  
-    
+
     # build the part 1 of filename
     BaseFilename_part1=Prog+'_'+Obs+'_'+Rte+'_'
     
 
     # Set up type of 
-    
     
     runtype='clearsky' #'no_scattering' #aerosol_special #aerosol_default# #'clearsky'#     
     if Proc == 'sc':
@@ -446,7 +454,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
 
 
 #------------------------------------------------------------------------------
-def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
+def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, altitude_str='LSST',FLAG_VERBOSE=False):
     """
     ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num) 
     with aerosol simulation is performed
@@ -460,6 +468,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     -- prof_str : string defining the type of atmosphere
     -- proc_str : processing string defining the processes
     -- cloudext : cloud optical depth
+    -- altitude : string on the altitude (either the site name abrebiation (LSST/CTIO,OMP,OMK,MSL) or the string on altitude like akm_2.663)
     -- FLAG_VERBOSE : flag to activate verbose mode
     
     returns:
@@ -476,8 +485,23 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
         print(' 6) profile =',prof_str)
         print(' 7) interaction processes = ',proc_str)
         print(' 8) cloud extinction = ',cloudext)
+        print(' 9) site or altitude = ', altitude_str)
         print('--------------------------------------------')
     
+
+    # altitude workaround
+    if Dict_Of_sitesAltitudes.get(altitude_str):
+        altitude_num = Dict_Of_sitesAltitudes[altitude_str]
+    elif altitude_str[:4] == "akm_":
+        altitude_num = float(altitude_str[4:])
+    else:
+        raise Exception(f"Bad altitude/site string {altitude_str}")
+        altitude_num = Dict_Of_sitesAltitudes['LSST']
+
+    OBS_Altitude = altitude_num
+
+    if FLAG_DEBUG:
+        print(f"Observation site altitude for libradran sim : {OBS_Altitude} km")
     
     #Proc='sa'  # Pure absorption and Rayleigh scattering : Clear sky without aerosols
     if proc_str in ["sa","ab","sc","as","ae"]:
@@ -1222,7 +1246,7 @@ def ProcessSimulationaer2(airmass_num,pwv_num,oz_num,alpha_num,beta_num,press_nu
 if __name__ == "__main__":
     
     # Activate or not the mode with simulation of aerosols inside libradtran
-    AerosolTest_Flag=True
+    AerosolTest_Flag = False
     
     # init string variables
     # airmass
@@ -1247,6 +1271,9 @@ if __name__ == "__main__":
     # interaction process=""
     # 'sa': scattering and absorption, 'sc' : scattering only , 'ab' : absorption only
     proc_str=""
+
+    # altitude or site string
+    alt_str=""
     
     # Case No Aerosols
     # airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0
@@ -1254,9 +1281,9 @@ if __name__ == "__main__":
     # No aerosol, just call function ProcessSimulation()
     if AerosolTest_Flag==False:
         try:
-            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:p:c:m:q:",["z=","w=","o=","p=","c=","m=","q="])
+            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:p:c:m:q:s:",["z=","w=","o=","p=","c=","m=","q=","s="])
         except getopt.GetoptError:
-            print(' Exception bad getopt with :: '+sys.argv[0]+ ' [-v] -z <airmass> -w <pwv> -o <oz> -p <press> -c <cldvod> -m <atmmodel> -q <interactproc>')
+            print(' Exception bad getopt with :: '+sys.argv[0]+ ' [-v] -z <airmass> -w <pwv> -o <oz> -p <press> -c <cldvod> -m <atmmodel> -q <interactproc> -s<altitudesite-string>')
             sys.exit(2)
         
     
@@ -1285,6 +1312,8 @@ if __name__ == "__main__":
                 model_str = arg
             elif opt in ("-q", "--qp"):
                 proc_str = arg
+            elif opt in ("-s", "--site"):
+                alt_str = arg
 
             else:
                 print('Do not understand arguments : ',sys.argv)
@@ -1298,8 +1327,9 @@ if __name__ == "__main__":
         print("5) cld = ", cld_str)
         print("6) mod = ",model_str)
         print("7) proc = ",proc_str)
-        print("8) FLAG_VERBOSE = ",FLAG_VERBOSE)
-        print("9) FLAG_DEBUG = ",FLAG_DEBUG)
+        print("8) alt/site = ",alt_str)
+        print("9) FLAG_VERBOSE = ",FLAG_VERBOSE)
+        print("10) FLAG_DEBUG = ",FLAG_DEBUG)
         print('--------------------------------------------')
 
         # mandatory arguments
@@ -1312,6 +1342,10 @@ if __name__ == "__main__":
             sys.exit()
 
         if oz_str=="":
+            usage()
+            sys.exit()
+
+        if alt_str=="":
             usage()
             sys.exit()
              
@@ -1375,7 +1409,7 @@ if __name__ == "__main__":
         print("all arguments values are OK, start libradtran simulation")
         
         #ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
-        path, outputfile=ProcessSimulation(airmass_nb,pwv_nb,oz_nb,press_nb,model_str,proc_str=proc_str,cloudext=cld_nb ,FLAG_VERBOSE=FLAG_VERBOSE)
+        path, outputfile=ProcessSimulation(airmass_nb,pwv_nb,oz_nb,press_nb,model_str,proc_str=proc_str,cloudext=cld_nb ,altitude_str=alt_str,FLAG_VERBOSE=FLAG_VERBOSE)
     
         print('*****************************************************')
         print(' path       = ', path)
@@ -1385,9 +1419,9 @@ if __name__ == "__main__":
     # With aerosol, just call function ProcessSimulationaer()
     else:
         try:
-            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:a:p:c:m:q:",["z=","w=","o=","a=","p=","c=","m=","q="])
+            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:a:p:c:m:q:s:",["z=","w=","o=","a=","p=","c=","m=","q=","s="])
         except getopt.GetoptError:
-            print(' Exception bad getopt with :: '+sys.argv[0]+ ' -z <airmass> -w <pwv> -o <oz> -a <aer> -p <press> -c <cldvod>-m <model> -q <interaction>')
+            print(' Exception bad getopt with :: '+sys.argv[0]+ ' -z <airmass> -w <pwv> -o <oz> -a <aer> -p <press> -c <cldvod>-m <model> -q <interaction> -s <altitude-string>')
             sys.exit(2)
         
     
@@ -1419,6 +1453,8 @@ if __name__ == "__main__":
                 model_str = arg
             elif opt in ("-q", "--qp"):
                 proc_str = arg
+            elif opt in ("-s", "--site"):
+                alt_str = arg
             else:
                 print('Do not understand arguments : ',sys.argv)
             
@@ -1432,8 +1468,9 @@ if __name__ == "__main__":
         print("6) cld = ", cld_str)
         print("7) mod = ", model_str)
         print("8) proc = ", proc_str)
-        print("9) FLAG_VERBOSE = ",FLAG_VERBOSE)
-        print("10) FLAG_DEBUG = ",FLAG_DEBUG)
+        print("9) alt/site = ",alt_str)
+        print("10) FLAG_VERBOSE = ",FLAG_VERBOSE)
+        print("11) FLAG_DEBUG = ",FLAG_DEBUG)
         print('--------------------------------------------')
 
         # mandatory arguments
@@ -1447,6 +1484,10 @@ if __name__ == "__main__":
 
         if oz_str=="":
             usageaer()
+            sys.exit()
+
+        if alt_str=="":
+            usage()
             sys.exit()
             
         airmass_nb=float(airmass_str)
@@ -1521,7 +1562,7 @@ if __name__ == "__main__":
         # do the simulation now 
         print("values are OK")
         #ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
-        path, outputfile=ProcessSimulationaer(airmass_nb,pwv_nb,oz_nb,aer_nb,press_nb,model_str,proc_str,cloudext=cld_nb,FLAG_VERBOSE=FLAG_VERBOSE)
+        path, outputfile=ProcessSimulationaer(airmass_nb,pwv_nb,oz_nb,aer_nb,press_nb,model_str,proc_str,cloudext=cld_nb,altitude_str=alt_str,FLAG_VERBOSE=FLAG_VERBOSE)
     
         print('*****************************************************')
         print(' path       = ', path)
