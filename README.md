@@ -31,6 +31,7 @@ ex:
 
 Installation of libradtranpy from configuring setuptools defined in pyproject.toml file.
 (see https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html)
+This package is maintained through the tool LINCC Frameworks Python Project Template (https://lincc-ppt.readthedocs.io/en/latest/index.html)
 
     cd libradtranpy
     pip install -e '.[dev]'
