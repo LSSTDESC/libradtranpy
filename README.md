@@ -3,14 +3,14 @@
 - author : Sylvie Dagoret-Campagne
 - affiliation : IJCLab/IN2P3/CNRS
 - creation date : October 2022
-- Last update : October 18th 2022
+- Last update : October 20th 2023
 
 
 ## Installation
 
 ### Installation of libradtran
 
-The atmospheric simulation LibRadTran must be installed according the instruction given in 
+The atmospheric simulation LibRadTran fir multiple site (different altitudes) must be installed according the instruction given in 
 http://www.libradtran.org/doku.php
 
 
@@ -38,7 +38,7 @@ ex:
 if **libradtranpy/libradtranpy/libsimulateVisible.py** is in the python path:
 
 
-	libradtranpy/libsimulateVisible.py  [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc>
+	libradtranpy/libsimulateVisible.py  [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc> -s<site>
  	 - z   : airmass from 1.0 to 3.0, typical z=1 
  	 - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm
  	 - oz  : ozone in Dobson units from 200 DU to 400 DU
@@ -47,12 +47,13 @@ if **libradtranpy/libradtranpy/libsimulateVisible.py** is in the python path:
  	 - c   : Cloud vertical optical depth, typical c=0
  	 - m   : Atmospheric model, typical m='us' 
  	 - q   : Interaction processes, typical q='sa' for scattering and absorption
+         - s   : Observation site : LSST, CTIO, ....  
  	 - v   : activate verbose to get atmospheric profile
 	 Examples : 
-	 	 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0
-	 	 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -a 0.3 -c 0 -p 742 -m 'us' -q 'sa'
+	 	 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0 -s LSST
+	 	 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -a 0.3 -c 0 -p 742 -m  us -q sa -s LSST
 	 To generate ascii printout of the used atmospheric model table in a log file :
-	 	 python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 >& output.log
+	 	 python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 -s LSST >& output.log
 	 
 
 ### Outputs of libradtran
@@ -61,7 +62,7 @@ if **libradtranpy/libradtranpy/libsimulateVisible.py** is in the python path:
  
 **librandtranpy** manages the different simulations and their output files in a hierarchical directories. The top level directory is **simulations/**.
 
-The output of libradtran can be found in subdirs of **simulations/RT/2.0.3/LS/pp/**.
+The output of libradtran can be found in subdirs of **simulations/RT/2.0.3/observationsite/pp/**.
 
 
 
@@ -76,11 +77,11 @@ The call of libradtran through libradtranpy can be done as follow:
 A call without aerosols:
 
     path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,pressure,
-                                                      prof_str='us',proc_str='sa',cloudext=cloudext)
+                                                      prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str="LSST")
 A call with aerosols:
 
     path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pressure,
-                                                      prof_str='us',proc_str='sa',cloudext=cloudext)
+                                                      prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str="LSST")
 
 
 **path,thefilename** are the path and filename of the output ascii file.
