@@ -13,6 +13,8 @@
 The atmospheric simulation LibRadTran fir multiple site (different altitudes) must be installed according the instruction given in 
 http://www.libradtran.org/doku.php
 
+This documentation assumes libradtran version 2.0.5 is installed on your computer (version July 2023)
+
 
 ### To use libradtran inside librandtranpy wrapper
 
@@ -22,20 +24,23 @@ Environnement variable **LIBRADTRANDIR** must be set to libradtran installation 
 ex:
 
 	ls $LIBRADTRANDIR
-	bin                     data                    include                 	lib                     libRadtran-2.0.3        	libradtran-2.0.3.tar.gz share
+	bin                     data                    include                 	lib                     libRadtran-2.0.5        share
 
 
 ### Installation of libradtranpy
 
+Installation of libradtranpy from configuring setuptools defined in pyproject.toml file.
+(see https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html)
+
     cd libradtranpy
-    python setup.py install
+    pip install -e '.[dev]'
        
 ## Use if libradtranpy
 
 
 ### Use in the shell
 
-if **libradtranpy/libradtranpy/libsimulateVisible.py** is in the python path:
+if **libradtranpy/src/libradtranpy/libsimulateVisible.py** is in the python path:
 
 
 	libradtranpy/libsimulateVisible.py  [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc> -s<site>
@@ -62,7 +67,7 @@ if **libradtranpy/libradtranpy/libsimulateVisible.py** is in the python path:
  
 **librandtranpy** manages the different simulations and their output files in a hierarchical directories. The top level directory is **simulations/**.
 
-The output of libradtran can be found in subdirs of **simulations/RT/2.0.3/observationsite/pp/**.
+The output of libradtran can be found in subdirs of **simulations/RT/2.0.5/observationsite/pp/**.
 
 
 
