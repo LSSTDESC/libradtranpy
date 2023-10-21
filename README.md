@@ -3,7 +3,7 @@
 - author : Sylvie Dagoret-Campagne
 - affiliation : IJCLab/IN2P3/CNRS
 - creation date : October 2022
-- Last update : October 20th 2023
+- Last update : October 21th 2023
 
 
 ## Installation
@@ -47,7 +47,7 @@ if **libradtranpy/libradtranpy/libsimulateVisible.py** is in the python path:
  	 - c   : Cloud vertical optical depth, typical c=0
  	 - m   : Atmospheric model, typical m='us' 
  	 - q   : Interaction processes, typical q='sa' for scattering and absorption
-         - s   : Observation site : LSST, CTIO, ....  
+     - s   : Observation site : LSST, CTIO, ....  
  	 - v   : activate verbose to get atmospheric profile
 	 Examples : 
 	 	 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0 -s LSST

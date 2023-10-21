@@ -1,0 +1,9 @@
+# Changes here will be overwritten by Copier
+_commit: v1.4.3
+_src_path: gh:lincc-frameworks/python-project-template
+author_email: sylvie.dagoret-campagne@ijclab.in2p3.fr
+author_name: Sylvie Dagoret-Campagne
+custom_install: false
+package_name: libradtranpy
+project_license: BSD
+project_name: libradtranpy
