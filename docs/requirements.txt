@@ -1,0 +1,12 @@
+sphinx
+sphinx-rtd-theme
+sphinx-autoapi
+nbsphinx
+ipython
+jupytext
+jupyter
+matplotlib
+seaborn
+scipy
+astropy
+numpy
