@@ -5,7 +5,7 @@
 # Here we vary PWV
 # author: sylvielsstfr
 # creation date : November 2nd 2016
-# last update : October 21th 2023
+# last update : October 22th 2023
 #
 #################################################################
 import os
@@ -57,7 +57,7 @@ Dict_Of_sitesAltitudes = {'LSST':2.663,
                           'OHP':0.65,
                           'PDM':2.8905,
                           'OMK':4.205,
-                          'OSL':0,
+                          'OSL':0.000,
                            }
 
 
@@ -188,10 +188,11 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         print(' 7) cloud extinction = ',cloudext)
         print(' 8) site or altitude = ', altitude_str)
         print('--------------------------------------------')
-   
+
    
     # altitude workaround
-    if Dict_Of_sitesAltitudes.get(altitude_str):
+    #if Dict_Of_sitesAltitudes.get(altitude_str):
+    if altitude_str in Dict_Of_sitesAltitudes.keys():    
         altitude_num = Dict_Of_sitesAltitudes[altitude_str]
         altitude_dir = altitude_str
     elif altitude_str[:4] == "akm_":
@@ -387,7 +388,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         uvspec.inp["mol_modify2"] = oz_str
         
         # rescale pressure   if reasonable pressure values are provided
-        if press_num>400. and press_num<1030.:
+        if press_num>200. and press_num<1080.:
             uvspec.inp["pressure"] = press_num
 
         uvspec.inp["ic_file"] = "1D ./IC.DAT"
@@ -478,7 +479,8 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     
 
     # altitude workaround
-    if Dict_Of_sitesAltitudes.get(altitude_str):
+    #if Dict_Of_sitesAltitudes.get(altitude_str):
+    if altitude_str in Dict_Of_sitesAltitudes.keys():  
         altitude_num = Dict_Of_sitesAltitudes[altitude_str]
         altitude_dir = altitude_str
     elif altitude_str[:4] == "akm_":
@@ -685,7 +687,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
         uvspec.inp["mol_modify2"] = oz_str
         
         # rescale pressure   if reasonable pressure values are provided
-        if press_num>400. and press_num<1030.:
+        if press_num>200. and press_num<1080.:
             uvspec.inp["pressure"] = press_num
         else:
             if FLAG_VERBOSE:
@@ -863,7 +865,8 @@ if __name__ == "__main__":
         # optional arguments
         # pressure
         if press_str=="":
-            press_str="743."
+            #this force to use pressure of the altitude
+            press_str="0.0"
         press_nb=float(press_str)
           
         # cloud
@@ -1000,10 +1003,11 @@ if __name__ == "__main__":
         oz_nb=float(oz_str)	
         
         
-         # optional arguments
-        # pressure
+        # optional arguments
+        # pressure 
         if press_str== "":
-            press_str= "743.0"
+            # set it to zero to force libradtran to use the pressure for the altitude
+            press_str= "0.0"
         press_nb=float(press_str)  
         
         #aerosols
