@@ -3,7 +3,7 @@
 - author : Sylvie Dagoret-Campagne
 - affiliation : IJCLab/IN2P3/CNRS
 - creation date : October 2022
-- Last update : October 21th 2023
+- Last update : October 22th 2023
 
 
 ## Installation
@@ -34,9 +34,13 @@ Installation of libradtranpy from configuring setuptools defined in pyproject.to
 This package is maintained through the tool LINCC Frameworks Python Project Template (https://lincc-ppt.readthedocs.io/en/latest/index.html)
 
     cd libradtranpy
+    # on Linux
+	pip install -e .[dev]
+    # on Mac M1 or M2 with zsh
+
     pip install -e '.[dev]'
        
-## Use if libradtranpy
+## Use  libradtranpy
 
 
 ### Use in the shell
@@ -70,8 +74,6 @@ if **libradtranpy/src/libradtranpy/libsimulateVisible.py** is in the python path
 
 The output of libradtran can be found in subdirs of **simulations/RT/2.0.5/observationsite/pp/**.
 
-
-
 	 	 
 	 	 
 ### Use of libradtranpy as python package library
@@ -100,14 +102,13 @@ The result of the simulation can be obtaiend by:
                                                       
                                                       
 
-- See the notebooks for more examples in **libradtranpy/notebooks/**
 
 
 
-## Tools
+## Documentation
 
-In **libradtrapy/tools/** a usefull library to evaluate the pressure and density profile vs altitude with analytical formula and the computation of Rayleigh and Aerosols optical depth vs wavelength.
-These tools are usefull to test the output of libradtran.
+
+In [docs/notebooks/intro_notebooks.ipynb](docs/notebooks/intro_notebooks.ipynb) a series of notebooks show the use of libradtranpy and a set of tools on atmospher to control its output. 
 
 
 
