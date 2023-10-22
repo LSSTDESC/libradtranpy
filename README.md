@@ -108,7 +108,7 @@ The result of the simulation can be obtaiend by:
 ## Documentation
 
 
-In [docs/notebooks/intro_notebooks.ipynb](docs/notebooks/intro_notebooks.ipynb) a series of notebooks show the use of libradtranpy and a set of tools on atmospher to control its output. 
+In [docs/notebooks/intro_notebook.ipynb](docs/notebooks/intro_notebooks.ipynb) a series of notebooks show the use of libradtranpy and a set of tools on atmospher to control its output. 
 
 
 
