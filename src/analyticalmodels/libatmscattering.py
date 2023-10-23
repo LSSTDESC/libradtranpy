@@ -15,17 +15,17 @@ import matplotlib.pyplot as plt
 
 
 
-N_A=6.0221409e23  # mol-1
-R=8.3144598       # J/(K.mol)
-g0=9.80665        #  m/s2
+N_A = 6.0221409e23  # mol-1
+R = 8.3144598       # J/(K.mol)
+g0 = 9.80665        #  m/s2
 
-M_air= 28.965338*1e-3  # u.g/u.mol  (kg/mol)
-M_air_dry=28.9644*1e-3 # *u.g/u.mol (kg/mol)
-M_h2o=18.016*1e-3      # *u.g/u.mol  (kg/mol)
+M_air = 28.965338*1e-3  # u.g/u.mol  (kg/mol)
+M_air_dry = 28.9644*1e-3 # *u.g/u.mol (kg/mol)
+M_h2o = 18.016*1e-3      # *u.g/u.mol  (kg/mol)
 
-P0=101325.         # *u.Pa;   /*!< Pa : pressure at see level */
-T0=288.15          # *u.K;   #/*!< sea level temperature */  
-L=0.0065           #*u.K/u.m  # refroidissement en fonction de l'altitude
+P0 = 101325.         # *u.Pa;   /*!< Pa : pressure at see level */
+T0 = 288.15          # *u.K;   #/*!< sea level temperature */  
+L = 0.0065           #*u.K/u.m  # refroidissement en fonction de l'altitude
 
 LSST_Altitude = 2750  # in meters from astropy package (Cerro Pachon)
 CTIO_Altitude = 2200  # in meters from astropy package (Cerro Pachon)

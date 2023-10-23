@@ -59,7 +59,14 @@ Dict_Of_sitesAltitudes = {'LSST':2.663,
                           'OMK':4.205,
                           'OSL':0.000,
                            }
-
+# pressure calculated by libradtran
+Dict_Of_sitesPressures = {'LSST':731.50433,
+                          'CTIO':774.6052,
+                          'OHP':937.22595,
+                          'PDM':710.90637,
+                          'OMK':600.17224,
+                          'OSL':1013.000,
+                        }
 
 # july 2023 libradtran version
 TOPTOPDIR=f"simulations/RT/{libradtranvers}/"
