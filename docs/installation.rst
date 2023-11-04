@@ -1,20 +1,7 @@
-.. libradtranpy documentation main file.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to libradtranpy's documentation!
-========================================================================================
 
 
-
-
-
-
-
-
-
-Dev Guide - Getting Started
----------------------------
+Installation Guide - Getting Started
+------------------------------------
 
 Before installing any dependencies or writing code, it's a great idea to create a
 virtual environment. LINCC-Frameworks engineers primarily use `conda` to manage virtual
@@ -48,14 +35,3 @@ Notes:
    into documentation for ReadTheDocs works as expected. For more information, see
    the Python Project Template documentation on
    `Sphinx and Python Notebooks <https://lincc-ppt.readthedocs.io/en/latest/practices/sphinx.html#python-notebooks>`_.
-
-
-.. toctree::
-   :hidden:
-
-   Home page <self>
-   introduction
-   installation
-   quickstart
-   API Reference <autoapi/index>
-   Notebooks <notebooks>
