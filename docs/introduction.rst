@@ -35,17 +35,3 @@ If you don't find your observation site, choose the site having the closest alti
 and provides the effective ground pressure.
 
 The transmissions will be pressure corrected for the corresponding ground pressure.         
-
-
-
-
-illustration
-------------
-
-The following figure shows the atmospheric air transparency profiles provided by ``AtmEmulator``.
-
-
-.. figure:: images/getObsAtmo.png
-    :width: 800
-
-

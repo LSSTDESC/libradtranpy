@@ -1,9 +1,5 @@
-# libradtranpy : libradtran python wrapper
+# libradtranpy : a libradtran python wrapper
 
-- author : Sylvie Dagoret-Campagne
-- affiliation : IJCLab/IN2P3/CNRS
-- creation date : October 2022
-- Last update : October 22th 2023
 
 
 ## Installation
@@ -21,7 +17,7 @@ This documentation assumes libradtran version 2.0.5 is installed on your compute
 
 Environnement variable **LIBRADTRANDIR** must be set to libradtran installation path under which one have /bin /data /include /lib and /share of libradtran installation directory. 
 
-ex:
+example:
 
 	ls $LIBRADTRANDIR
 	bin                     data                    include                 	lib                     libRadtran-2.0.5        share
@@ -111,4 +107,39 @@ The result of the simulation can be obtaiend by:
 In [docs/notebooks/intro_notebook.ipynb](docs/notebooks/intro_notebook.ipynb) a series of notebooks show the use of libradtranpy and a set of tools on atmospher to control its output. 
 
 
+Dev Guide - Getting Started with python project template
+--------------------------------------------------------
+
+Before installing any dependencies or writing code, it's a great idea to create a
+virtual environment. LINCC-Frameworks engineers primarily use `conda` to manage virtual
+environments. If you have conda installed locally, you can run the following to
+create and activate a new environment.
+
+.. code-block:: bash
+
+   >> conda create env -n <env_name> python=3.10
+   >> conda activate <env_name>
+
+
+Once you have created a new environment, you can install this project for local
+development using the following commands:
+
+.. code-block:: bash
+
+   >> pip install -e .'[dev]'
+   >> pre-commit install
+   >> conda install pandoc
+
+
+Notes:
+
+1) The single quotes around ``'[dev]'`` may not be required for your operating system.
+2) ``pre-commit install`` will initialize pre-commit for this local repository, so
+   that a set of tests will be run prior to completing a local commit. For more
+   information, see the Python Project Template documentation on
+   `pre-commit <https://lincc-ppt.readthedocs.io/en/latest/practices/precommit.html>`_.
+3) Install ``pandoc`` allows you to verify that automatic rendering of Jupyter notebooks
+   into documentation for ReadTheDocs works as expected. For more information, see
+   the Python Project Template documentation on
+   `Sphinx and Python Notebooks <https://lincc-ppt.readthedocs.io/en/latest/practices/sphinx.html#python-notebooks>`_.
 
