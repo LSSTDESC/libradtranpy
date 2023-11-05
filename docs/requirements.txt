@@ -13,3 +13,4 @@ numpy
 numpydoc
 pandoc
 pandas
+astropy
