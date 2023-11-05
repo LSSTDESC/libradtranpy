@@ -16,7 +16,11 @@ Installation
 Usage
 -----
 
-The accessas follow.
+As ``libRadtran`` is not installed on ``readthedocs``, the following example
+cannot appear.
+
+The access is shown as follow:
+
 These are detailed in :doc:`apidocs`.
 
 .. code::

@@ -106,9 +106,11 @@ The result of the simulation can be obtaiend by:
 
 In [docs/notebooks/intro_notebook.ipynb](docs/notebooks/intro_notebook.ipynb) a series of notebooks show the use of libradtranpy and a set of tools on atmospher to control its output. 
 
+- or at https://libradtranpy.readthedocs.io/en/latest/
 
-Dev Guide - Getting Started with python project template
---------------------------------------------------------
+
+## Dev installation Guide from LINCC-Frameworks - Getting Started with python project template
+
 
 Before installing any dependencies or writing code, it's a great idea to create a
 virtual environment. LINCC-Frameworks engineers primarily use `conda` to manage virtual
