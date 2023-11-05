@@ -62,6 +62,10 @@ master_doc = "index"  # This assumes that sphinx-build is called from the root d
 html_show_sourcelink = False  # Remove 'view source code' from top of page (for html, not python)
 add_module_names = False # Remove namespaces from class/method signatures
 
+# readthedocs ne peut pas fournir l'API de ce module car libradtran ne peut pas être
+# installé sur readthedoc
+# autodoc_mock_imports = ['libradtranpy.libsimulateVisible']
+
 autoapi_type = "python"
 autoapi_dirs = ["../src"]
 autoapi_ignore = ["*/__main__.py", "*/_version.py"]
