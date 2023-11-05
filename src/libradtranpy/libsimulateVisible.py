@@ -23,9 +23,9 @@ FLAG_DEBUG = False
 #-------------------------------------
 
 # LibRadTran installation directory
-home = os.environ['HOME']+'/'
-libradtranpath = os.getenv('LIBRADTRANDIR')+'/'
-libradtrandatapath = libradtranpath + "/share/libRadtran/data"
+home = os.path.join(os.environ['HOME'],'/')
+libradtranpath = os.path.join(os.getenv('LIBRADTRANDIR'),'/')
+libradtrandatapath = os.path.join(libradtranpath , "/share/libRadtran/data")
 
 print("libradtranpath=",libradtranpath)
 
