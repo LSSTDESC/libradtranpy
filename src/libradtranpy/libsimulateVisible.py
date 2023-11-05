@@ -23,11 +23,20 @@ FLAG_DEBUG = False
 #-------------------------------------
 
 # LibRadTran installation directory
-home = os.path.join(os.environ['HOME'],'/')
-libradtranpath = os.path.join(os.getenv('LIBRADTRANDIR'),'/')
-libradtrandatapath = os.path.join(libradtranpath , "/share/libRadtran/data")
 
-print("libradtranpath=",libradtranpath)
+var = 'HOME'
+if var not in os.environ:
+    raise EnvironmentError("Failed because {} is not set.".format(var))
+home = os.environ['HOME']+ '/'
+
+var = 'LIBRADTRANDIR'
+if var not in os.environ:
+    raise EnvironmentError("Failed because {} is not set.".format(var))
+libradtranpath = os.getenv('LIBRADTRANDIR')+ '/'
+
+
+libradtrandatapath = libradtranpath + "/share/libRadtran/data"
+#print("libradtranpath=",libradtranpath)
 
 # Filename : RT_LS_pp_us_sa_rt_z15_wv030_oz30.txt
 #          : Prog_Obs_Rte_Atm_proc_Mod_zXX_wv_XX_oz_XX

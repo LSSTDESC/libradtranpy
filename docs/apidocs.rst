@@ -9,10 +9,10 @@ Main User Interface
    :members:
 
 
- Note that the API for the module  ``libradtranpy.libsimulateVisible`` cannot appear because
+
+..  Note that the API for the module  ``libradtranpy.libsimulateVisible`` cannot appear because
  ``libRadtranpy`` is not installed there.
  It is recommended the user generate these docs on his computer.
-
  (TODO : Check if libradtran pip install works for readthedoc).
  
 
