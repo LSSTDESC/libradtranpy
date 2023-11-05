@@ -42,6 +42,13 @@ The wavelength range available in ``libradtranpy`` is 300.0 nm - 1200.0 nm (by h
 it could be modified to be configurable in later versions). 
 
 
+An example of air transmission at different observation sites is shown below:
+
+.. figure:: images/libradtran_transmission_differentobssites.png
+   :width: 600
+
+
+
 
 Main parameters
 ---------------
@@ -90,7 +97,7 @@ other parameters
 
 airmass parameter
 ~~~~~~~~~~~~~~~~~
-The airmass parameter is translated in solar zenith angle.
+The airmass parameter is translated in solar zenith angle for ``libRadtran``.
 
 
 Precipitable water vapor

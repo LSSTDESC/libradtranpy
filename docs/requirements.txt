@@ -9,9 +9,7 @@ jupyter
 matplotlib
 seaborn
 scipy
-astropy
 numpy
 numpydoc
-scipy
-pandas
 pandoc
+pandas
