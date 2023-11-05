@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue May 22 20:19:44 2018
-
-@author: dagoret
+Author: Sylvie Dagoret-Campagne 
+Affliiation : LAL/IN2P3/CNRS
 """
 
 import numpy as np
@@ -39,22 +39,40 @@ altitude0=LSST_Altitude  # m altitude at LSST
 
 #-----------------------------------------------------------------
 def Temperature_adiabatic(h):
+    """Temperature vs altitude
+    
+    :param h: altitude 
+    :type h: float in meters
+
+    :return: temperature
+    :rtype: float in unit degree Kelvin 
+    """
     return  T0 - L * h
 #------------------------------------------------------------------------------------
 def Pressure_isothermal(altitude):
     """
-    Pressure( double altitude)
-    Provide the pressure at the altitude.
-    Attention, ici on considère de l'air sec.
+    Pressure at the altitude for an isothermal atmosphere.
+    For dry air.
     
-    - Input : altitude : input altitude in meters
-    - Output :pressure  : output pressure in Pa SI 
+    :param altitude: input altitude
+    :type altitude: float in meters
+    :return: pressure  
+    :rtype: float in unit Pa SI 
     """
-    h=altitude
-    P=P0*np.exp(-((g0*M_air_dry)/(R*T0))*h)
+    h = altitude
+    P = P0*np.exp(-((g0*M_air_dry)/(R*T0))*h)
     return P  
 #------------------------------------------------------------------------------------
-def Pressure_adiabatic(h):
+def Pressure_adiabatic(altitude):
+    """
+    Pressure at the altitude for an adiabatic atmosphere.
+    
+    :param altitude: input altitude
+    :type altitude: float in unit meters
+    :return: pressure  
+    :rtype: float in unit Pa SI 
+    """
+    h = altitude
     P=P0*np.exp(g0*M_air_dry/R/L*np.log(1-L*h/T0))
     return P
 #---------------------------------------------------------------------------------
@@ -63,45 +81,56 @@ def MassDensity_isothermal(altitude):
     """
     Mass density Density for Dry Air in kg per m^3
     Provide the density at the altitude.
-    Attention, ici on considère de l'air sec.
+    For dry air.
 
-    - Input : altitude : input altitude in meters
-    - Output :density  : output density in kg/m^3
+    :param altitude: input altitude in meters
+    :type altitude: float in unit meters.
+    :return: density 
+    :rtype: float in unit kg/m^3
     """
     h = altitude
-    T=T0
+    T = T0
     rho = Pressure_isothermal(h) *  M_air_dry / (R * T)
     return rho
 
 
 # ------------------------------------------------------------------------------------
-def MassDensity_adiabatic(h,T=0):
+def MassDensity_adiabatic(altitude,T=0):
     """
     Mass density Density for Dry Air in kg per m^3
     Provide the density at the altitude.
-    Attention, ici on considère de l'air sec.
+    For dry air.
 
-    - Input : altitude : input altitude in meters
-             : Temperature in K. If T=0, use average altitude profile
-    - Output :density  : output density in kg/m^3
+    :param altitude: altitude
+    :type altitude: flotat in unit meter
+    :param T: Temperature. If T=0, use average altitude profile
+    :type T: float in degree K.
+    :return: density  
+    :rtype: float in unit kg/m^3
     """
+    h = altitude
 
     if T==0:
         T = T0 - L * h
     rho = Pressure_adiabatic(h) * M_air_dry / (R * T)
     return rho
 # ------------------------------------------------------------------------------------
-def MassDensity_adiabatic_humid(h,Hr,T=0):
+def MassDensity_adiabatic_humid(altitude,Hr,T=0):
     """
     Mass density Density for Dry Air in kg per m^3
-    Provide the density at the altitude.
-    Attention, ici on considère de l'air sec.
-
-    - Input : altitude : input altitude in meters
-             : Temperature in K. If T=0, use average altitude profile
-             : Hr relative humidity
-    - Output :density  : output density in kg/m^3
+    Provide the density at the corresponding altitude.
+    
+    :param altitude: altitude 
+    :type altitude: float in unit meter
+    :param Hr: relative humidity
+    :type Hr: float
+    :param T: Temperature. If T=0, use average altitude profile
+    :type T: float in unit degree Kelvin.
+    :return: density 
+    :rtype: float in unit kg/m^3
     """
+
+    h = altitude
 
     if T==0:
         T = T0 - L * h
@@ -120,8 +149,10 @@ def AtomeDensity_isothermal(altitude):
     Provide the atome density at the altitude.
     Attention, ici on considère de l'air sec.
 
-    - Input : altitude : input altitude in meters
-    - Output :density  : output density in atome / m^3
+    :param altitude: input altitude 
+    :type: float in unit meters
+    :return: density 
+    :rtype: float in unit atom/ m^3
     """
     h = altitude
     T = T0
@@ -131,17 +162,22 @@ def AtomeDensity_isothermal(altitude):
 
 
 # ------------------------------------------------------------------------------------
-def AtomeDensity_adiabatic(h,T=0):
+def AtomeDensity_adiabatic(altitude,T=0):
     """
     atome Density for Dry Air ( double altitude)
 
     Provide the atome density at the altitude.
     Attention, ici on considère de l'air sec.
 
-    - Input : altitude : input altitude in meters
-          : Temperature in K. If T=0, use average altitude profile
-    - Output :density  : output density in atome / m^3
+    :param altitude: altitude 
+    :type altitude: float in unit meter
+    :param T:  Temperature. If T=0, use average altitude profile
+    :type T: float in unit degree Kelvin
+    :return: density  
+    :rtype:  float in atom / m^3
     """
+    h = altitude
+
     if T==0:
         T = T0 - L * h
     rho = Pressure_adiabatic(h) * N_A / (R * T)
@@ -154,10 +190,15 @@ def AtomeDensity_adiabatic(h,T=0):
 def XDepth_isothermal(altitude,costh=1):
     """
     Function : XDepth(altitude,costh)
-      Provide the column depth in gr / cm^2 equivalent of airmass in physical units
-    - Input :  altitude : input altitude in meters
-    - Input :  costh    : input cosimus of zenith angle 
-    - Output :  XDepth  : output column depth in gr per cm squared
+    Provide the column depth in gr / cm^2 equivalent of airmass in physical units
+    for an isothermal atmosphere.
+
+    :param  altitude: input altitude
+    :type altitude: float in unit meter
+    :param costh: cosimus of zenith angle
+    :type costh: float 
+    :return:  XDepth  column depth 
+    :rtype: float in unit gr per cm squared
     """
     h=altitude
     XD=Pressure_isothermal(h)/g0/costh
@@ -167,10 +208,15 @@ def XDepth_isothermal(altitude,costh=1):
 def XDepth_adiabatic(altitude,costh=1):
     """
     Function : XDepth(altitude,costh)
-      Provide the column depth in gr / cm^2 equivalent of airmass in physical units
-    - Input :  altitude : input altitude in meters
-    - Input :  costh    : input cosimus of zenith angle 
-    - Output :  XDepth  : output column depth in gr per cm squared
+    Provide the column depth in gr / cm^2 equivalent of airmass in physical units
+    for an adiabatic atmosphere.
+
+    :param  altitude: input altitude
+    :type altitude: float in unit meter
+    :param costh: cosimus of zenith angle
+    :type costh: float 
+    :return:  XDepth  column depth 
+    :rtype: float in unit gr per cm squared
     """
     h=altitude
     XD=Pressure_adiabatic(h)/g0/costh
@@ -179,23 +225,26 @@ def XDepth_adiabatic(altitude,costh=1):
 def RayOptDepth_adiabatic(wavelength, altitude=altitude0, costh=1):
     """
     Function RayOptDepth(double wavelength, double altitude, double costh)
+    Provide Rayleigh optical depth in an adiabatic atmosphere.
 
-    Provide Rayleigh optical depth
-         
-    - Input  wavelength : input wavelength in nm
-    - Input  altitude : input altitude in meters
-    - Input   costh    : input cosimus of zenith angle 
-    - Output  OptDepth  : output optical depth no unit, for Rayleigh
+    :param wavelength: wavelength
+    :type wavelength: float in unit nm
+    :param  altitude: input altitude
+    :type altitude: float in unit meter
+    :param costh: cosimus of zenith angle
+    :type costh: float 
+    :return: the optical depth no unit, for Rayleigh
+    :rtype: float
     """
 
     h=altitude
 
     #A=(XDepth(h,costh)/(3102.*u.g/(u.cm*u.cm)))
-    A=(XDepth_adiabatic(h,costh)/(3102.*1e-3/(1e-4)))
-    B=np.exp(-4.*np.log(wavelength/(400.)))  
-    C= 1-0.0722*np.exp(-2*np.log(wavelength/(400)))
+    A = (XDepth_adiabatic(h,costh)/(3102.*1e-3/(1e-4)))
+    B = np.exp(-4.*np.log(wavelength/(400.)))  
+    C = 1-0.0722*np.exp(-2*np.log(wavelength/(400)))
 
-    OD=A*B/C
+    OD = A*B/C
         
     #double OD=XDepth(altitude,costh)/2970.*np.power((wavelength/400.),-4);
 
@@ -204,16 +253,20 @@ def RayOptDepth_adiabatic(wavelength, altitude=altitude0, costh=1):
 def RayOptDepth_isothermal(wavelength, altitude=altitude0, costh=1):
     """
     Function RayOptDepth(double wavelength, double altitude, double costh)
+    Provide Rayleigh optical depth for an isothermal atmosphere
 
-    Provide Rayleigh optical depth
+    :param wavelength: wavelength
+    :type wavelength: float in unit nm
+    :param  altitude: input altitude
+    :type altitude: float in unit meter
+    :param costh: cosimus of zenith angle
+    :type costh: float 
+    :return: the optical depth no unit, for Rayleigh scattering
+    :rtype: float
          
-    - Input  wavelength : input wavelength in nm
-    - Input  altitude : input altitude in meters
-    - Input   costh    : input cosimus of zenith angle 
-    - Output  OptDepth  : output optical depth no unit, for Rayleigh
     """
 
-    h=altitude
+    h = altitude
 
     #A=(XDepth_adiab(h,costh)/(3102.*u.g/(u.cm*u.cm)))
     #B=np.exp(-4.*np.log(wavelength/(400.*u.nm)))  
@@ -232,24 +285,28 @@ def RayOptDepth_isothermal(wavelength, altitude=altitude0, costh=1):
 def RayOptDepth2_adiabatic(wavelength, altitude=altitude0, costh=1):
     """
     Function RayOptDepth2(wavelength, altitude, costh)
-
-    Provide Rayleigh optical depth
-    - Input wavelength : input wavelength in nm
-    - Input altitude : input altitude in meters
-    - Input costh    : input cosimus of zenith angle 
-    - Output OptDepth  : optical depth no unit
+    Provide Rayleigh optical depth for an adiabatic atmosphere
     
+    :param wavelength: wavelength
+    :type wavelength: float in unit nm
+    :param  altitude: input altitude
+    :type altitude: float in unit meter
+    :param costh: cosimus of zenith angle
+    :type costh: float 
+    :return: the optical depth no unit, for Rayleigh scattering
+    :rtype: float
+
     WORSE !
     
     """
-    h=altitude
+    h = altitude
     #A=XDepth(h,costh)/(2770.*u.g/(u.cm*u.cm))
     #B=np.exp(-4*np.log(wavelength/(400.*u.nm)))
     
-    A=XDepth_adiabatic(h,costh)/(27700.)
-    B=np.exp(-4*np.log(wavelength/(400)))
+    A = XDepth_adiabatic(h,costh)/(27700.)
+    B = np.exp(-4*np.log(wavelength/(400)))
       
-    OD=A*B         
+    OD = A*B         
   
     return OD
 #-----------------------------------------------------------------------------------
@@ -258,37 +315,46 @@ def RayOptDepth2_adiabatic(wavelength, altitude=altitude0, costh=1):
 def RayOptDepth2_isothermal(wavelength, altitude=altitude0, costh=1):
     """
     Function RayOptDepth2(wavelength, altitude, costh)
+    Provide Rayleigh optical depth for an isothermal atmosphere.
 
-    Provide Rayleigh optical depth
-    - Input wavelength : input wavelength in nm
-    - Input altitude : input altitude in meters
-    - Input costh    : input cosimus of zenith angle 
-    - Output OptDepth  : optical depth no unit
+    :param wavelength: wavelength
+    :type wavelength: float in unit nm
+    :param  altitude: input altitude
+    :type altitude: float in unit meter
+    :param costh: cosimus of zenith angle
+    :type costh: float 
+    :return: the optical depth no unit, for Rayleigh scattering
+    :rtype: float
     
     """
-    h=altitude
+    h = altitude
     #A=XDepth(h,costh)/(2770.*u.g/(u.cm*u.cm))
     #B=np.exp(-4*np.log(wavelength/(400.*u.nm)))
     
-    A=XDepth_isothermal(h,costh)/(27700.)
-    B=np.exp(-4*np.log(wavelength/(400)))
+    A = XDepth_isothermal(h,costh)/(27700.)
+    B = np.exp(-4*np.log(wavelength/(400)))
       
-    OD=A*B         
+    OD = A*B         
   
     return OD
 #-----------------------------------------------------------------------------------
 def AeroOptDepth(wavelength,tau_aerosols_500=0.05,alpha_ang=1) :
     """
     AeroOptDepth(wavelength, alpha)
-
     Provide Vertical Aerosols optical depth
-    - Input : wavelength : input wavelength in nm
-    - Input : alpha : Angstrom exponent
-    - Output : OptDepth  : output optical depth no unit for aerosols
+
+    :param wavelength: wavelength
+    :type wavelength: float in unit nm
+    :param tau_aerosols_500: VAOD at 500 nm
+    :type tau_aerosols_500: float
+    :param alpha_ang: Angstrom exponent, must be positive.
+    :type alpha_ang: float
+    :return: aerosol optical depth
+    :rtype: float
     
     """
 
-    OD=tau_aerosols_500*np.exp(-alpha_ang*np.log(wavelength/(500)))
+    OD = tau_aerosols_500*np.exp(-alpha_ang*np.log(wavelength/(500)))
     return OD
 
 
@@ -298,12 +364,14 @@ def AeroOptDepth(wavelength,tau_aerosols_500=0.05,alpha_ang=1) :
 def RayOptDepthXD(wavelength, xdepth):
     """
     Function RayOptDepthXD(wavelength, xdepth)
-
     Provide Rayleigh optical depth
 
-    - Input  wavelength : input wavelength in nm
-    - Input   xdepth   : depth in g/cm2
-    - Output  OptDepth  : output optical depth no unit, for Rayleigh
+    :param wavelength: wavelength
+    :type wavelength: float in nm
+    :param xdepth: atmospheric depth
+    :type xdepth: float in unit  g/cm2
+    :return:  optical depth no unit, for Rayleigh
+    :rtype: float 
     """
 
     #A = xdepth / (3102. * u.g / (u.cm * u.cm))
