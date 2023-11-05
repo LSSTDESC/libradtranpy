@@ -26,13 +26,37 @@ version = ".".join(release.split(".")[:2])
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["sphinx.ext.mathjax", "sphinx.ext.napoleon", "sphinx.ext.viewcode"]
 
-extensions.append("autoapi.extension")
-extensions.append("nbsphinx")
+
+extensions = [ 'sphinx.ext.autodoc',
+               'sphinx.ext.duration',
+               'sphinx.ext.doctest',
+               'sphinx.ext.intersphinx',
+               'sphinx.ext.autosummary',
+               'sphinx.ext.mathjax', 
+               'sphinx.ext.napoleon', 
+               'sphinx.ext.viewcode',
+               'sphinx_tabs.tabs',
+               'numpydoc',
+               'nbsphinx',
+#               'sphinx.ext.graphviz',
+#               'sphinx.ext.inheritance_diagram',
+#               "autoapi.extension",
+               ]
+
+#extensions = [ 'sphinx.ext.autodoc',
+#               'sphinx.ext.doctest',
+#               'sphinx.ext.intersphinx',
+#               'sphinx_design',
+#              ]
+
+nbsphinx_execute = 'never'
+nbsphinx_allow_errors = True
+source_suffix = ['.rst']
+
 
 templates_path = []
-exclude_patterns = ['_build', '**.ipynb_checkpoints']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store','**.ipynb_checkpoints']
 
 master_doc = "index"  # This assumes that sphinx-build is called from the root directory
 html_show_sourcelink = False  # Remove 'view source code' from top of page (for html, not python)

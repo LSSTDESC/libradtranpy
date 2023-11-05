@@ -1,6 +1,7 @@
-sphinx
-sphinx-rtd-theme
+sphinx==7.1.2
+sphinx-rtd-theme==1.3.0rc1
 sphinx-autoapi
+sphinx-tabs
 nbsphinx
 ipython
 jupytext
@@ -8,5 +9,7 @@ jupyter
 matplotlib
 seaborn
 scipy
-astropy
 numpy
+numpydoc
+pandoc
+pandas

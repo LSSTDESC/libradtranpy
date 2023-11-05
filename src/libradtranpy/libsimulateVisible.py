@@ -1,19 +1,17 @@
-################################################################
-#
-# Script to simulate air transparency with LibRadTran
-# With a pure absorbing atmosphere
-# Here we vary PWV
-# author: sylvielsstfr
-# creation date : November 2nd 2016
-# last update : October 22th 2023
-#
-#################################################################
+"""
+Module libratranpy, an interface package to libradtran executable
+library to simulate air transparency with LibRadTran
+
+:author: sylvielsstfr
+:creation date : November 2nd 2016
+:last update : October 22th 2023
+"""
+
+
 import os
 import re
 import math
 import numpy as np
-import pandas as pd
-from astropy.io import fits
 import sys,getopt
 
 from libradtranpy import UVspec3
@@ -77,6 +75,7 @@ def CleanSimDir():
 
 ############################################################################
 def ensure_dir(f):
+    """function to create a path"""
     d = os.path.dirname(f)
     if not os.path.exists(f):
         os.makedirs(f)
@@ -85,6 +84,7 @@ def ensure_dir(f):
 
 
 def usage():
+    """Description of the usageof the script"""
     print("*******************************************************************")
     print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -p <P> -c <cld> -m<mod> -q<proc> -s<site-string> -v<verbose-flag>')
     print(' \t - z   : airmass from 1.0 to 3.0, typical z=1 ')
@@ -111,6 +111,7 @@ def usage():
     print("*******************************************************************")
     
 def usageaer():
+    """Description of the usage of the script"""
     print("*******************************************************************")
     print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc> -s<altitude> -v<verbose-flag>')
     print(' \t - z   : airmass from 1.0 to 3.0, typical z=1 ')
@@ -143,15 +144,20 @@ def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
      ApplyAerosols(wl,tr,thelambda0,tau0,alpha0)
      Function to provide the aerosol transmission from an analytical formula
      
-     - input :
-     -- wl np array of wavelength in nm
-     -- tr transparency array without aerosols
-     -- thelambda0 : the reference point where to have tau0 in nm
-     -- tau0 is the extinction at thelambda0
-     -- alpha0 the Angstrom exponent
-     
-     - output
-     -- array of aerosol transmission 
+     Parameters:
+
+     :param wl: np array of wavelengths
+     :type wl: float in nm unit
+     :param tr: transparency array without aerosols, by example the one calculated by libRadtran
+     :type tr: float
+     :param thelambda0: the reference point where to have tau0 in nm
+     :type thelambda0: float in nm unit
+     :param tau0: is the extinction at thelambda0
+     :type tau0: float
+     :param alpha0: the Angstrom exponent
+     :type alpha0: float
+     :returns: array of aerosol transmission
+     :rtype: float 
     """
     #extinc_aer=tau0*(thelambda0/wl)**alpha0
     extinc_aer=tau0*np.power(wl/thelambda0,-alpha0)
@@ -168,19 +174,40 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     Function to simulate air transparency.
     No aerosol simulation is performed.
     
-    input arguments :
-    -- airmass_num : airmass
-    -- pwv_num : precipitable water vapor in mm
-    -- num,oz_num : ozone in Dobson Unit
-    -- press_num : ground pressure in hPa or millibar
-    -- prof_str : string defining the type of atmosphere
-    -- proc_str : processing string defining the processes
-    -- cloudext : cloud depth
-    -- altitude : string on the altitude (either the site name abrebiation (LSST/CTIO,OMP,OMK,MSL) or the string on altitude like akm_2.663)
-    -- FLAG_VERBOSE : flag to activate verbose mode
-    
-    Returns:
-     -- return OUTPUTDIR,outputFilename : path and filename of datafile containing the simulated data     
+    Parameters:
+
+    :param airmass_num: airmass
+    :type airmass_num: float, unitless
+
+    :param pwv_num: precipitable water vapor 
+    :type pwv_num: float, in units mm
+
+    :param oz_num: ozone colon depth 
+    :type oz_num: float, in Dobson unit
+
+    :param press_num: ground pressure 
+    :type press_num: float in unit of in hPa or millibar
+
+    :param prof_str: defines the type of atmosphere, such standard us, 
+    mid latitude summer, mid latitude winter, tropical,.., default standard us 
+    :type prof_str: optional string among us,ms,mw,tp,ss,sw
+
+    :param proc_str: activation of different processes light-air interaction, 
+    like scattering and absorption (sa), absorption only (ab), scattering only (sc),..,
+    default scattering and absorption (sa)
+    :type proc_str: optional string among sa,ab,sc,ae,as
+
+    :param cloudext: cloud optical depth, default 0
+    :type cloudext: float, optional
+
+    :param altitude_str: observation site predefined (either the site name abrebiation (LSST/CTIO,OMP,OMK,MSL) or the string on altitude like akm_2.663)
+    :type altitude: string
+
+    :param FLAG_VERBOSE: flag to activate libradtran verbose mode that print all the table generated
+    :type FLAG_VERBOSE: bool
+
+    :returns: OUTPUTDIR,outputFilename, path and filename of datafile containing the simulated data     
+    :rtype: two strings
     """
 
 
@@ -452,21 +479,43 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num) 
     with aerosol simulation is performed
     
-    input arguments:
+    Parameters:
 
-    -- airmass_num : airmass
-    -- pwv_num : precipitable water vapor in mm
-    -- num,oz_num : ozone in Dobson Unit
-    -- aer_num : aerosol optical depth
-    -- press_num : ground pressure in hPa
-    -- prof_str : string defining the type of atmosphere
-    -- proc_str : processing string defining the processes
-    -- cloudext : cloud optical depth
-    -- altitude : string on the altitude (either the site name abrebiation (LSST/CTIO,OMP,OMK,MSL) or the string on altitude like akm_2.663)
-    -- FLAG_VERBOSE : flag to activate verbose mode
+    :param airmass_num: airmass
+    :type airmass_num: float, unitless
+
+    :param pwv_num: precipitable water vapor 
+    :type pwv_num: float, in units mm
+
+    :param oz_num: ozone colon depth 
+    :type oz_num: float, in Dobson unit
+
+    :param aer_num: vertical aerosol optical depth
+    :type aer_num: fliat, unitless
+
+    :param press_num: ground pressure 
+    :type press_num: float in unit of in hPa or millibar
+
+    :param prof_str: defines the type of atmosphere, such standard us, 
+    mid latitude summer, mid latitude winter, tropical,.., default standard us 
+    :type prof_str: optional string among us,ms,mw,tp,ss,sw
+
+    :param proc_str: activation of different processes light-air interaction, 
+    like scattering and absorption (sa), absorption only (ab), scattering only (sc),..,
+    default scattering and absorption (sa)
+    :type proc_str: optional string among sa,ab,sc,ae,as
+
+    :param cloudext: cloud optical depth, default 0
+    :type cloudext: float, optional
+
+    :param altitude_str: observation site predefined (either the site name abrebiation (LSST/CTIO,OMP,OMK,MSL) or the string on altitude like akm_2.663)
+    :type altitude: string
+
+    :param FLAG_VERBOSE: flag to activate libradtran verbose mode that print all the table generated
+    :type FLAG_VERBOSE: bool
     
-    returns:
-    -- return OUTPUTDIR,outputFilename : path and filename of datafile containing the simulated data
+    :returns: OUTPUTDIR,outputFilename, path and filename of datafile containing the simulated data     
+    :rtype: two strings
     """
 
     

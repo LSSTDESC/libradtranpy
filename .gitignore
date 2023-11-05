@@ -145,3 +145,7 @@ tmp/
 # Airspeed Velocity performance results
 _results/
 _html/
+
+*IC.DAT*
+*randomseed*
+*simulations*
