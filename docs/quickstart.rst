@@ -7,26 +7,11 @@ Installation
 
 .. code-block:: bash
 
-   git https://github.com/LSSTDESC/libradtranpy.git
-   cd librandtranpy
-   python setup.py install
+    git https://github.com/LSSTDESC/libradtranpy.git
+    cd librandtranpy
+    pip install -e .'[dev]'
    
 
-
-About libradtran
-----------------
-
-Libradtran is an atmospheric transmission full simulation package which can be downloaded
-from the web site http://www.libradtran.org/.
-
-.. figure:: images/libradtran.png
-   :width: 200
-
-This emulator provides interpolations from atmospheric transmissions for scattering and absorption
-processes photon-air which are calculated by libradtran (version 2.0.5 for this current release).  
-
-
- 
 
 Usage
 -----
@@ -35,17 +20,19 @@ The accessas follow.
 These are detailed in :doc:`apidocs`.
 
 .. code::
-
-   >>> from atmemulator.atmemulator import AtmEmulator
-   >>> emul =  AtmEmulator()
-   >>> # or
-   >>> emul =  AtmEmulator('CTIO')
-   >>> # or 
-   >>> emul =  AtmEmulator('LSST',743.0)
-   
-   >>> wl = [400.,800.,900.] # define the wavelength array
+   >>> import os
+   >>> import numpy as np
+   >>> from libradtranpy import libsimulateVisible
+   >>> # check libradtran is in your path
+   >>> os.getenv('LIBRADTRANDIR')
    >>> am=1.2  # set the airmass
    >>> pwv =4.0  # set the precipitable water vapor in mm
    >>> oz=300. # set the ozone depth on DU
-   >>> transm = emul.GetAllTransparencies(wl,am,pwv,oz)
+   >>> pressure = 0. # use default value
+   >>> cloudext=0 # use default
+   >>> path,thefile=libsimulateVisible.ProcessSimulation(am,pwv,ozone,pressure,
+         prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str='LSST',FLAG_VERBOSE=False)
+   >>> data = np.loadtxt(os.path.join(path,thefile))
+   >>> wl = data[:,0]   # wavelength array
+   >>> transm = data[:,1] # transmission array
 

@@ -3,8 +3,12 @@
 Installation Guide - Getting Started
 ------------------------------------
 
+This package has been generated according the 
+`Python project Template  <https://lincc-ppt.readthedocs.io/en/latest/>`_ recommendations.
 Before installing any dependencies or writing code, it's a great idea to create a
-virtual environment. LINCC-Frameworks engineers primarily use `conda` to manage virtual
+virtual environment. 
+
+Primarily use `conda` to manage virtual
 environments. If you have conda installed locally, you can run the following to
 create and activate a new environment.
 

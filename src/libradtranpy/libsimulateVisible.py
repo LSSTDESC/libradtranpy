@@ -150,7 +150,7 @@ def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
 
      :param wl: np array of wavelengths
      :type wl: float in nm unit
-     :param tr: transparency array without aerosols
+     :param tr: transparency array without aerosols, by example the one calculated by libRadtran
      :type tr: float
      :param thelambda0: the reference point where to have tau0 in nm
      :type thelambda0: float in nm unit
