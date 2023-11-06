@@ -35,6 +35,11 @@ This package is maintained through the tool LINCC Frameworks Python Project Temp
     # on Mac M1 or M2 with zsh
 
     pip install -e '.[dev]'
+
+
+### run tests
+
+    python -m unittest tests/libradtranpy/*.py
        
 ## Use  libradtranpy
 
