@@ -4,7 +4,7 @@ library to simulate air transparency with LibRadTran
 
 :author: sylvielsstfr
 :creation date: November 2nd 2016
-:last update: October 22th 2023
+:last update: November 6th 2023
 """
 
 
@@ -13,6 +13,7 @@ import re
 import math
 import numpy as np
 import sys,getopt
+
 from libradtranpy import UVspec3
 
 libradtranvers = "2.0.5"
@@ -22,6 +23,13 @@ FLAG_DEBUG = False
 #-------------------------------------
 
 # LibRadTran installation directory
+
+FLAG_BRIGHTNESS = True         
+FLAG_IRRADIANCE = False
+FLAG_IRRADIANCE_INTEGRATED = False
+FLAG_RADIANCE = False
+FLAG_TRANSMITTANCE = False
+
 
 var = 'HOME'
 if var not in os.environ:
@@ -46,7 +54,8 @@ Rte='pp'   # pp for parallel plane of ps for pseudo-spherical
 Atm=['us']   # short name of atmospheric sky here US standard and  Subarctic winter
 Proc='sa'  # light interaction processes : sc for pure scattering,ab for pure absorption
            # sa for scattering and absorption, ae with aerosols default, as with aerosol special
-Mod='rtvis'   # Models for absorption bands : rt for REPTRAN, lt for LOWTRAN, k2 for Kato2
+#Mod='rtvis'   # Models for absorption bands : rt for REPTRAN, lt for LOWTRAN, k2 for Kato2
+Mod='rtthermal'   # Models for absorption bands : rt for REPTRAN, lt for LOWTRAN, k2 for Kato2
 ZXX='z'        # XX index for airmass z :   XX=int(10*z)
 WVXX='wv'      # XX index for PWV       :   XX=int(pwv*10)
 OZXX='oz'      # XX index for OZ        :   XX=int(oz/10)
@@ -74,11 +83,19 @@ Dict_Of_sitesPressures = {'LSST':731.50433,
                           'OSL':1013.000,
                         }
 
+Dict_Of_sitesTags = {'LSST':'LS',
+                     'CTIO':'CT',
+                     'OHP':'OH',
+                     'PDM':'PM',
+                     'OMK':'MK',
+                     'OSL':'SL',
+                    }
+
 # july 2023 libradtran version
 TOPTOPDIR=f"simulations/RT/{libradtranvers}/"
 
 def CleanSimDir():
-    """Remove simulation directory"""   
+    """Remove simulation directory"""  
     os.system("rm -rf simulations")
 
 
@@ -238,6 +255,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     if altitude_str in Dict_Of_sitesAltitudes.keys():    
         altitude_num = Dict_Of_sitesAltitudes[altitude_str]
         altitude_dir = altitude_str
+        Obs = Dict_Of_sitesTags[altitude_str] # for the path of input/output
     elif altitude_str[:4] == "akm_":
         height_str = altitude_str[4:]
         altitude_num = float(height_str)
@@ -401,11 +419,11 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         #uvspec.inp["atmosphere_file"] = libradtranpath+'data/atmmod/'+atmosphere+'.dat'
         uvspec.inp["atmosphere_file"] = libradtrandatapath+'/atmmod/'+atmosphere+'.dat'
         # arbitrary earth albedo
-        uvspec.inp["albedo"]           = '0.2'
+        uvspec.inp["albedo"]           = '0.0'
     
         uvspec.inp["rte_solver"] = rte_eq
              
-        if Mod == 'rtvis':
+        if Mod == 'rtthermal':
             uvspec.inp["mol_abs_param"] = molmodel + ' ' + molresol
         else:
             uvspec.inp["mol_abs_param"] = molmodel
@@ -438,15 +456,44 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         uvspec.inp["ic_properties"] = "yang"
         uvspec.inp["ic_modify"] = "tau set "+str(cloudext)
 
-        uvspec.inp["output_user"] = 'lambda edir'
+        
         uvspec.inp["altitude"] = OBS_Altitude   # Altitude  observatory
-        uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
+       
+        # in visible mode
+        #uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
         #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_1.0nm.dat'
         #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_0.1nm.dat'
-        uvspec.inp["sza"]        = str(sza)
-        uvspec.inp["phi0"]       = '0'
-        uvspec.inp["wavelength"]       = '250.0 1200.0'
-        uvspec.inp["output_quantity"] = 'reflectivity' #'transmittance' #
+        #uvspec.inp["output_user"] = 'lambda edir' in vis
+        #uvspec.inp["sza"]        = str(sza) in vis
+        #uvspec.inp["phi0"]       = '0'   in vis
+        #uvspec.inp["wavelength"]       = '250.0 1200.0'
+        #uvspec.inp["output_quantity"] = 'reflectivity' #'transmittance' #
+
+        # in thermal mode
+        uvspec.inp["source"] = 'thermal '
+        
+        if FLAG_BRIGHTNESS:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_quantity"] = 'brightness'
+        elif FLAG_IRRADIANCE:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_process"] =  "per_nm"
+        elif FLAG_IRRADIANCE_INTEGRATED:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"] = '7500.0 13500.0'
+            uvspec.inp["output_process"] = "sum"
+        elif FLAG_RADIANCE:
+            uvspec.inp["umu"] = '-1. -0.9 -0.8 -0.7 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1'
+            uvspec.inp["output_user"] = 'lambda uu'
+            uvspec.inp["output_process"] =  "per_nm"
+        elif FLAG_TRANSMITTANCE:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_quantity"] = 'reflectivity'
+        
+        
         if FLAG_VERBOSE:
             uvspec.inp["verbose"] = ''
         else:

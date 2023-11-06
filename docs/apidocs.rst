@@ -2,17 +2,18 @@ API Documentation
 =================
 
 
-Main User Interface
--------------------
+Main User Interface for simulations in Visible mode
+---------------------------------------------------
 
 .. automodule:: libradtranpy.libsimulateVisible
    :members:
 
-
-..  Note that the API for the module  ``libradtranpy.libsimulateVisible`` cannot appear because
- ``libRadtranpy`` is not installed there.
- It is recommended the user generate these docs on his computer. (TODO : Check if libradtran pip install works for readthedoc).
  
+Main User Interface for simulations in Thermal mode
+---------------------------------------------------
+
+.. automodule:: libradtranpy.libsimulateThermal
+   :members:
 
 Utility class
 -------------
