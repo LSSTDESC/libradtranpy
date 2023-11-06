@@ -164,35 +164,7 @@ def usageaer():
     print('\t \t Argument List:', str(sys.argv))
     print("*******************************************************************")
 
-#----------------------------------------------------------------------------
-def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
-    """
-     ApplyAerosols(wl,tr,thelambda0,tau0,alpha0)
-     Function to provide the aerosol transmission from an analytical formula
-     
-     Parameters:
-
-     :param wl: np array of wavelengths
-     :type wl: float in nm unit
-     :param tr: transparency array without aerosols, by example the one calculated by libRadtran
-     :type tr: float
-     :param thelambda0: the reference point where to have tau0 in nm
-     :type thelambda0: float in nm unit
-     :param tau0: is the extinction at thelambda0
-     :type tau0: float
-     :param alpha0: the Angstrom exponent
-     :type alpha0: float
-     :returns: array of aerosol transmission
-     :rtype: float 
-    """
-    #extinc_aer=tau0*(thelambda0/wl)**alpha0
-    extinc_aer=tau0*np.power(wl/thelambda0,-alpha0)
-    tr_aer=np.exp(-extinc_aer)
-    tr_tot=tr*tr_aer
-    return tr_tot
-    
-    
-#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------
 
 def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, altitude_str ="LSST",FLAG_VERBOSE=False):
     """
@@ -768,7 +740,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
         uvspec.inp["atmosphere_file"] = libradtrandatapath+'/atmmod/'+atmosphere+'.dat'
         
         # choose arbitrary earth albedo
-        uvspec.inp["albedo"]           = '0.2'
+        uvspec.inp["albedo"]           = '0.0'
     
         uvspec.inp["rte_solver"] = rte_eq
               
@@ -809,15 +781,40 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
         uvspec.inp["ic_properties"] = "yang"
         uvspec.inp["ic_modify"] = "tau set " + str(cloudext)
 
-        uvspec.inp["output_user"] = 'lambda edir'
         uvspec.inp["altitude"] = OBS_Altitude   # Altitude LSST observatory
-        uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
-        #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_1.0nm.dat'
-        #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_0.1nm.dat'
-        uvspec.inp["sza"]        = str(sza)
-        uvspec.inp["phi0"]       = '0'
-        uvspec.inp["wavelength"]       = '250.0 1200.0'
-        uvspec.inp["output_quantity"] = 'reflectivity' #'transmittance' #
+
+        # visible
+        #uvspec.inp["output_user"] = 'lambda edir'
+        #uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
+        #uvspec.inp["sza"]        = str(sza)
+        #uvspec.inp["phi0"]       = '0'
+        #uvspec.inp["wavelength"]       = '250.0 1200.0'
+        #uvspec.inp["output_quantity"] = 'reflectivity' #'transmittance' #
+
+        # in thermal mode
+        uvspec.inp["source"] = 'thermal '
+
+        if FLAG_BRIGHTNESS:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_quantity"] = 'brightness'
+        elif FLAG_IRRADIANCE:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_process"] =  "per_nm"
+        elif FLAG_IRRADIANCE_INTEGRATED:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"] = '7500.0 13500.0'
+            uvspec.inp["output_process"] = "sum"
+        elif FLAG_RADIANCE:
+            uvspec.inp["umu"] = '-1. -0.9 -0.8 -0.7 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1'
+            uvspec.inp["output_user"] = 'lambda uu'
+            uvspec.inp["output_process"] =  "per_nm"
+        elif FLAG_TRANSMITTANCE:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_quantity"] = 'reflectivity'
+
 
         if FLAG_VERBOSE:
             uvspec.inp["verbose"] = ''
