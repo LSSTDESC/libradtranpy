@@ -177,7 +177,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     
     Parameters:
 
-    :param airmass_num: airmass
+    :param airmass_num: airmass, useless in thermal mode
     :type airmass_num: float, unitless
 
     :param pwv_num: precipitable water vapor 
@@ -207,8 +207,14 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     :param FLAG_VERBOSE: flag to activate libradtran verbose mode that print all the table generated
     :type FLAG_VERBOSE: bool
 
+    :param thermal_output: select the kind of output for thermal mode, default set to brightness
+    :type thermal_output: string among (brightness, irradiance, integrated_irradiance, radiance, transmittance)
+
     :returns: OUTPUTDIR,outputFilename, path and filename of datafile containing the simulated data     
     :rtype: two strings
+
+
+
     """
 
     FLAG_BRIGHTNESS = False
@@ -546,7 +552,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     
     Parameters:
 
-    :param airmass_num: airmass
+    :param airmass_num: airmass, useless in thermal mode
     :type airmass_num: float, unitless
 
     :param pwv_num: precipitable water vapor 
@@ -581,6 +587,9 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
 
     :param FLAG_VERBOSE: flag to activate libradtran verbose mode that print all the table generated
     :type FLAG_VERBOSE: bool
+
+    :param thermal_output: select the kind of output for thermal mode, default set to brightness
+    :type thermal_output: string among (brightness, irradiance, integrated_irradiance, radiance, transmittance)
     
     :returns: OUTPUTDIR,outputFilename, path and filename of datafile containing the simulated data     
     :rtype: two strings

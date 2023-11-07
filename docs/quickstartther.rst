@@ -45,7 +45,7 @@ Outputs of libradtran
 The output of libradtran can be found in subdirs of 
 ``simulations/RT/2.0.5/observationsite/pp/``.
 
-	 	 
+* note airmass is useless in thermal mode (see radiance for directional flux)	 	 
 	 	 
 Use of libradtranpy as python package library
 `````````````````````````````````````````````````
@@ -76,7 +76,7 @@ The result of the simulation can be obtained by:
         wl = data[:,0]
         atm = data[:,1]                                                 
                                                       
-
+Two examples of images are shown below:
 
 
 .. figure:: images/thermalsim_cld_brightness.png
@@ -86,7 +86,7 @@ The result of the simulation can be obtained by:
     :width: 600
  
 
-
+More examples are given in notebooks.
 
 
 Remarks on the documentation on readthedocs
@@ -103,19 +103,18 @@ These are detailed in :doc:`apidocs`.
 .. code::
    >>> import os
    >>> import numpy as np
-   >>> from libradtranpy import libsimulateVisible
-   >>> # check libradtran is in your path
-   >>> os.getenv('LIBRADTRANDIR')
-   >>> am=1.2  # set the airmass
+   >>> from libradtranpy import libsimulateThermal
+   
+   >>> am=1.0  # set the airmass , useless in thermal mode
    >>> pwv =4.0  # set the precipitable water vapor in mm
    >>> oz=300. # set the ozone depth on DU
    >>> pressure = 0. # use default value
    >>> cloudext=0 # use default
-   >>> path,thefile=libsimulateVisible.ProcessSimulation(am,pwv,ozone,pressure,
-         prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str='LSST',FLAG_VERBOSE=False)
+   >>> path,thefile=libsimulateThermal.ProcessSimulation(am,pwv,ozone,pressure,
+         prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str='LSST',FLAG_VERBOSE=False,thermal_output="brightness")
    >>> data = np.loadtxt(os.path.join(path,thefile))
    >>> wl = data[:,0]   # wavelength array
-   >>> transm = data[:,1] # transmission array
+   >>> temperature = data[:,1] # transmission array
 
-Moreover the ``libradtranpy.libsimulateVisible`` API cannot appear on readthedocs website.
+Moreover the ``libradtranpy.libsimulateThermal`` API cannot appear on readthedocs website.
 This API may appear on user's computer if ``libRadtran`` is installed correctly. 

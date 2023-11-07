@@ -31,6 +31,7 @@ wavelength range from 300 nm to 1200 nm.
    installation
    quickstart
    quickstartther
+   tests
    apidocs
    Notebooks <notebooks>
 
