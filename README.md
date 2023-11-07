@@ -26,6 +26,7 @@ from libradtran installation directory.
 
 example:
 
+```
 /> tree -L 1 libRadtran
 libRadtran
 ├── bin
@@ -33,9 +34,11 @@ libRadtran
 ├── lib
 ├── libRadtran-2.0.5
 └── share
+```
 
 and the inside the share directory the ``data/`` directory must be available:
 
+```
 cd libRadTran
 /> tree -L 2 share/
 share/
@@ -44,10 +47,11 @@ share/
     ├── data
     ├── doc
     └── examples
+````
 
 and inside the ``data/`` directory you must have *libRadtran data* installed as folow
 
-
+```
 />tree -L 1 data
 data
 ├── aerosol
@@ -62,6 +66,7 @@ data
 ├── scripts
 ├── solar_flux
 └── wc
+```
 
 ### Installation of libradtranpy
 
@@ -69,13 +74,14 @@ Installation of libradtranpy from configuring setuptools defined in pyproject.to
 (see https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html)
 This package is maintained through the tool LINCC Frameworks Python Project Template (https://lincc-ppt.readthedocs.io/en/latest/index.html)
 
+```
     cd libradtranpy
     # on Linux
 	pip install -e .[dev]
     # on Mac M1 or M2 with zsh
 
     pip install -e '.[dev]'
-
+```
 
 ### run tests
 
@@ -163,14 +169,13 @@ A call with aerosols:
 
 The result of the simulation can be obtaiend by:
 
-    data = np.loadtxt(os.path.join(path,thefile))
-    wl = data[:,0]
-    atm = data[:,1]                                                 
+```python
+data = np.loadtxt(os.path.join(path,thefile))
+wl = data[:,0]
+atm = data[:,1]
+```                                             
                                                       
                                                       
-
-
-
 
 ## Documentation
 
@@ -188,21 +193,20 @@ virtual environment. LINCC-Frameworks engineers primarily use `conda` to manage 
 environments. If you have conda installed locally, you can run the following to
 create and activate a new environment.
 
-.. code-block:: bash
-
-   >> conda create env -n <env_name> python=3.10
-   >> conda activate <env_name>
-
+```bash
+    >> conda create env -n <env_name> python=3.10
+    >> conda activate <env_name>
+```
 
 Once you have created a new environment, you can install this project for local
 development using the following commands:
 
-.. code-block:: bash
 
+```bash
    >> pip install -e .'[dev]'
    >> pre-commit install
    >> conda install pandoc
-
+```
 
 Notes:
 
