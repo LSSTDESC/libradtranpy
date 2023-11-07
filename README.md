@@ -26,8 +26,8 @@ from libradtran installation directory.
 
 example:
 
-```
-/> tree -L 1 libRadtran
+```bash
+>> tree -L 1 libRadtran
 libRadtran
 ├── bin
 ├── include
@@ -38,8 +38,8 @@ libRadtran
 
 and the inside the share directory the ``data/`` directory must be available:
 
-```
-cd libRadTran
+```bash
+>> cd libRadTran
 /> tree -L 2 share/
 share/
 └── libRadtran
@@ -51,8 +51,8 @@ share/
 
 and inside the ``data/`` directory you must have *libRadtran data* installed as folow
 
-```
-/>tree -L 1 data
+```bash
+>> tree -L 1 data
 data
 ├── aerosol
 ├── albedo
@@ -74,24 +74,29 @@ Installation of libradtranpy from configuring setuptools defined in pyproject.to
 (see https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html)
 This package is maintained through the tool LINCC Frameworks Python Project Template (https://lincc-ppt.readthedocs.io/en/latest/index.html)
 
-```
-    cd libradtranpy
-    # on Linux
-	pip install -e .[dev]
-    # on Mac M1 or M2 with zsh
-
-    pip install -e '.[dev]'
+```bash
+>> cd libradtranpy
+# on Linux
+>> pip install -e .[dev]
+# on Mac M1 or M2 with zsh
+>> pip install -e '.[dev]'
 ```
 
 ### run tests
 
 A simple test to check if libradtran is installed correctly runs:
 
-    python -m unittest tests/libradtranpy/*.py
+```bash
+# call unit tests
+>> python -m unittest tests/libradtranpy/*.py
+```
 
 or in verbose mode:
 
-    python -m unittest -v tests/libradtranpy/*.py
+```bash
+# call unit tests in verbose mode
+>> python -m unittest -v tests/libradtranpy/*.py
+```
 
 it checks:
 - the existence of the environnement variable `LIBRADTRANDIR` point to the libradtran installation top directory
@@ -116,8 +121,8 @@ Then whe have two interface modules for these modes :
 
 if **libradtranpy/src/libradtranpy/libsimulateVisible.py** is in the python path:
 
-
-	libradtranpy/libsimulateVisible.py  [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc> -s<site>
+```bash
+	>> libradtranpy/libsimulateVisible.py  [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc> -s<site>
  	 - z   : airmass from 1.0 to 3.0, typical z=1 
  	 - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm
  	 - oz  : ozone in Dobson units from 200 DU to 400 DU
@@ -133,11 +138,13 @@ if **libradtranpy/src/libradtranpy/libsimulateVisible.py** is in the python path
 	 	 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -a 0.3 -c 0 -p 742 -m  us -q sa -s LSST
 	 To generate ascii printout of the used atmospheric model table in a log file :
 	 	 python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 -s LSST >& output.log
+```
 	 
 By example just run the following command in the shell:
-     
-    python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0 -s LSST 
 
+```bash    
+>> python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0 -s LSST 
+```
 
 ### Outputs of libradtran
 
@@ -153,17 +160,23 @@ The output of libradtran can be found in subdirs of **simulations/RT/2.0.5/obser
 
 The call of libradtran through libradtranpy can be done as follow:
 
+```python
     from libradtranpy import libsimulateVisible
-      
+ ```
+
 A call without aerosols:
 
-    path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,pressure,
+```python
+path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,pressure,
                                                       prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str="LSST")
+```
+
 A call with aerosols:
 
-    path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pressure,
+```python
+path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pressure,
                                                       prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str="LSST")
-
+```
 
 **path,thefilename** are the path and filename of the output ascii file.
 
@@ -203,9 +216,9 @@ development using the following commands:
 
 
 ```bash
-   >> pip install -e .'[dev]'
-   >> pre-commit install
-   >> conda install pandoc
+    >> pip install -e .'[dev]'
+    >> pre-commit install
+    >> conda install pandoc
 ```
 
 Notes:
