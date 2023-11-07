@@ -10,7 +10,7 @@ The use of this interface is quite straight forwared provided the
 
 ### 1) Installation of libradtran
 
-The atmospheric simulation LibRadTran fir multiple site (different altitudes) must be installed according the instruction given in 
+The atmospheric simulation LibRadTran for multiple site (different altitudes) must be installed according the instruction given in 
 http://www.libradtran.org/doku.php
 
 This documentation assumes libradtran version 2.0.5 is installed on your computer (version July 2023)
