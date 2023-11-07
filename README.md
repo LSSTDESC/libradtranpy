@@ -14,7 +14,7 @@ This documentation assumes libradtran version 2.0.5 is installed on your compute
 ### To use libradtran inside librandtranpy wrapper
 
 
-Environnement variable **LIBRADTRANDIR** must be set to libradtran installation path under which one have each of these directories:
+Environnement variable **LIBRADTRANDIR** must be set to ``libRadtran`` installation path under which one have each of these directories:
 
 - /bin 
 - /share/libratran/data
@@ -26,7 +26,7 @@ from libradtran installation directory.
 
 example:
 
-/Users/dagoret/MacOSX/External>tree -L 1 libRadtran
+/> tree -L 1 libRadtran
 libRadtran
 ├── bin
 ├── include
@@ -34,16 +34,34 @@ libRadtran
 ├── libRadtran-2.0.5
 └── share
 
-and the inside the share directory the data dir must be available:
+and the inside the share directory the ``data/`` directory must be available:
 
-/Users/dagoret/MacOSX/External/libRadtran>tree -L 2 share/
+cd libRadTran
+/> tree -L 2 share/
 share/
 └── libRadtran
     ├── GUI
     ├── data
     ├── doc
     └── examples
-	
+
+and inside the ``data/`` directory you must have *libRadtran data* installed as folow
+
+
+/>tree -L 1 data
+data
+├── aerosol
+├── albedo
+├── altitude
+├── atmmod
+├── correlated_k
+├── crs
+├── filter
+├── ic
+├── nca_lookup
+├── scripts
+├── solar_flux
+└── wc
 
 ### Installation of libradtranpy
 
@@ -67,7 +85,7 @@ A simple test to check if libradtran is installed correctly runs:
 
 or in verbose mode:
 
-    python -m unittest -v tests/libradtranpy/test_libsimulateVisible.py
+    python -m unittest -v tests/libradtranpy/*.py
 
 it checks:
 - the existence of the environnement variable `LIBRADTRANDIR` point to the libradtran installation top directory
