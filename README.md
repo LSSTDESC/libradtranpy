@@ -1,9 +1,14 @@
 # libradtranpy : a libradtran python wrapper
 
+``libradtranpy`` is a python package which has been developped to provide an easy access to the `libRadtran` radiative simulation package.
+It is intended to provide an atmospheric transmission model that can  be used by the astronomical community for dealing with atmospheric transmission calibration issues.
 
-## Installation
+The use of this interface is quite straight forwared provided the
+`libRadtran` installation is correct.
 
-### Installation of libradtran
+## Installation of the two packages:
+
+### 1) Installation of libradtran
 
 The atmospheric simulation LibRadTran fir multiple site (different altitudes) must be installed according the instruction given in 
 http://www.libradtran.org/doku.php
@@ -11,7 +16,7 @@ http://www.libradtran.org/doku.php
 This documentation assumes libradtran version 2.0.5 is installed on your computer (version July 2023)
 
 
-### To use libradtran inside librandtranpy wrapper
+#### To use libradtran inside librandtranpy wrapper
 
 
 Environnement variable **LIBRADTRANDIR** must be set to ``libRadtran`` installation path under which one have each of these directories:
@@ -68,7 +73,7 @@ data
 └── wc
 ```
 
-### Installation of libradtranpy
+### 2) Installation of libradtranpy
 
 Installation of libradtranpy from configuring setuptools defined in pyproject.toml file.
 (see https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html)
@@ -82,7 +87,7 @@ This package is maintained through the tool LINCC Frameworks Python Project Temp
 >> pip install -e '.[dev]'
 ```
 
-### run tests
+### 3) Run libradtranpy tests
 
 A simple test to check if libradtran is installed correctly runs:
 
@@ -104,7 +109,7 @@ it checks:
 - the existence of the `data` directory which hold all the internal data that `libRadtran`requires for its execution.   
 - the execution of a libradtran simulation works well returning some data. 
        
-## Standard Use of libradtranpy
+## Standard Use of libradtranpy interface
 
 Two libRadtran running modes are available:
 - visible mode from wavelength range : 250.0 nm -  1200.0 nm
@@ -186,29 +191,29 @@ The result of the simulation can be obtaiend by:
 data = np.loadtxt(os.path.join(path,thefile))
 wl = data[:,0]
 atm = data[:,1]
-```                                             
-                                                      
-                                                      
+```                                                                 
 
-## Documentation
+The library ``libsimulateThermal`` can be used similarly. Please refers
+to the ``libradtranpy`` package documentation.
+
+## Documentation on the libradtranpy package
 
 
-In [docs/notebooks/intro_notebook.ipynb](docs/notebooks/intro_notebook.ipynb) a series of notebooks show the use of libradtranpy and a set of tools on atmospher to control its output. 
+A more detailed series of examples are given in the extensive notebook series in [docs/notebooks/intro_notebook.ipynb](docs/notebooks/intro_notebook.ipynb), showing a numberous use-cases of ``libradtranpy`` and a set of tools on atmospher to control its output. 
 
-- or at https://libradtranpy.readthedocs.io/en/latest/
+Another source of documentation can be found on the documentation repository [readthedocs](https://libradtranpy.readthedocs.io/en/latest/)
 
 
 ## Dev installation Guide from LINCC-Frameworks - Getting Started with python project template
 
 
-Before installing any dependencies or writing code, it's a great idea to create a
-virtual environment. LINCC-Frameworks engineers primarily use `conda` to manage virtual
+Before installing any dependencies or writing code, it's a great idea to create a virtual environment. LINCC-Frameworks engineers primarily use `conda` to manage virtual
 environments. If you have conda installed locally, you can run the following to
 create and activate a new environment.
 
 ```bash
-    >> conda create env -n <env_name> python=3.10
-    >> conda activate <env_name>
+>> conda create env -n <env_name> python=3.10
+>> conda activate <env_name>
 ```
 
 Once you have created a new environment, you can install this project for local
@@ -216,9 +221,9 @@ development using the following commands:
 
 
 ```bash
-    >> pip install -e .'[dev]'
-    >> pre-commit install
-    >> conda install pandoc
+>> pip install -e .'[dev]'
+>> pre-commit install
+>> conda install pandoc
 ```
 
 Notes:
