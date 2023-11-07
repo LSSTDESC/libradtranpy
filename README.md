@@ -22,12 +22,12 @@ This documentation assumes libradtran version 2.0.5 is installed on your compute
 Environnement variable **LIBRADTRANDIR** must be set to ``libRadtran`` installation path under which one have each of these directories:
 
 - /bin 
-- /share/libratran/data
+- /share/libRadtran/data
 - /include 
 - /lib and 
 - /share 
 
-from libradtran installation directory. 
+from ``libRadtran`` installation directory. 
 
 example:
 
@@ -106,7 +106,7 @@ or in verbose mode:
 it checks:
 - the existence of the environnement variable `LIBRADTRANDIR` point to the libradtran installation top directory
 - the existence of the `bin` directory and the executable `uvspec`
-- the existence of the `data` directory which hold all the internal data that `libRadtran`requires for its execution.   
+- the existence of the `share/libRadtran/data` directory which hold all the internal data that `libRadtran`requires for its execution.   
 - the execution of a libradtran simulation works well returning some data. 
        
 ## Standard Use of libradtranpy interface
