@@ -47,7 +47,7 @@ share/
     ├── data
     ├── doc
     └── examples
-````
+```
 
 and inside the ``data/`` directory you must have *libRadtran data* installed as folow
 
@@ -122,7 +122,7 @@ Then whe have two interface modules for these modes :
 if **libradtranpy/src/libradtranpy/libsimulateVisible.py** is in the python path:
 
 ```bash
-	>> libradtranpy/libsimulateVisible.py  [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc> -s<site>
+>> libradtranpy/libsimulateVisible.py  [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc> -s<site>
  	 - z   : airmass from 1.0 to 3.0, typical z=1 
  	 - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm
  	 - oz  : ozone in Dobson units from 200 DU to 400 DU
@@ -161,7 +161,7 @@ The output of libradtran can be found in subdirs of **simulations/RT/2.0.5/obser
 The call of libradtran through libradtranpy can be done as follow:
 
 ```python
-    from libradtranpy import libsimulateVisible
+from libradtranpy import libsimulateVisible
  ```
 
 A call without aerosols:
@@ -174,7 +174,7 @@ path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,pressure,
 A call with aerosols:
 
 ```python
-path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pressure,
+path,thefile = libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pressure,
                                                       prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str="LSST")
 ```
 
