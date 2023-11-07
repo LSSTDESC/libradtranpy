@@ -1,5 +1,5 @@
-Quickstart
-==========
+Quickstart for visible mode
+===========================
       
 
 Installation
@@ -76,7 +76,7 @@ The call of libradtran through libradtranpy can be done as follow:
 
 * ``path,thefilename`` are the path and filename of the output ascii file.
 
-The result of the simulation can be obtaiend by:
+The result of the simulation can be obtained by:
 
         data = np.loadtxt(os.path.join(path,thefile))
         wl = data[:,0]

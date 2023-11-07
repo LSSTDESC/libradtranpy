@@ -4,7 +4,7 @@ library to simulate air transparency with LibRadTran
 
 :author: sylvielsstfr
 :creation date: November 2nd 2016
-:last update: October 22th 2023
+:last update: November 7th 2023
 """
 
 
@@ -13,6 +13,7 @@ import re
 import math
 import numpy as np
 import sys,getopt
+
 from libradtranpy import UVspec3
 
 libradtranvers = "2.0.5"
@@ -22,6 +23,9 @@ FLAG_DEBUG = False
 #-------------------------------------
 
 # LibRadTran installation directory
+
+
+
 
 var = 'HOME'
 if var not in os.environ:
@@ -46,7 +50,8 @@ Rte='pp'   # pp for parallel plane of ps for pseudo-spherical
 Atm=['us']   # short name of atmospheric sky here US standard and  Subarctic winter
 Proc='sa'  # light interaction processes : sc for pure scattering,ab for pure absorption
            # sa for scattering and absorption, ae with aerosols default, as with aerosol special
-Mod='rtvis'   # Models for absorption bands : rt for REPTRAN, lt for LOWTRAN, k2 for Kato2
+#Mod='rtvis'   # Models for absorption bands : rt for REPTRAN, lt for LOWTRAN, k2 for Kato2
+Mod='rtthermal'   # Models for absorption bands : rt for REPTRAN, lt for LOWTRAN, k2 for Kato2
 ZXX='z'        # XX index for airmass z :   XX=int(10*z)
 WVXX='wv'      # XX index for PWV       :   XX=int(pwv*10)
 OZXX='oz'      # XX index for OZ        :   XX=int(oz/10)
@@ -81,12 +86,17 @@ Dict_Of_sitesTags = {'LSST':'LS',
                      'OMK':'MK',
                      'OSL':'SL',
                     }
+List_Of_Thermal_Outputs = ['BRIGHTNESS',
+                           'RADIANCE',
+                           'IRRADIANCE',
+                           'IRRADIANCE_INTEGRATED',
+                           'TRANSMITTANCE']
 
 # july 2023 libradtran version
 TOPTOPDIR=f"simulations/RT/{libradtranvers}/"
 
 def CleanSimDir():
-    """Remove simulation directory"""   
+    """Remove simulation directory"""  
     os.system("rm -rf simulations")
 
 
@@ -106,20 +116,21 @@ def usage():
     print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -p <P> -c <cld> -m<mod> -q<proc> -s<site-string> -v<verbose-flag>')
     print(' \t - z   : airmass from 1.0 to 3.0, typical z=1 ')
     print(' \t - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm')
-    print(' \t - oz  : ozone in Dobson units, typically from 100 DU to 600 DU')
-    print(' \t - p   : Pressure in hPa, typical P=775.3 hPa, optional, may provide 0 to choose the standard pressure at the selected obs site')
-    print(' \t - c   : Cloud vertical optical depth, optional, typical c=0')
-    print(' \t - m   : Atmospheric model, optional ,typical m=\'us\' ')
-    print(' \t - q   : Interaction processes, optional, typical q=\'sa\' for scattering and absorption')
-    print(' \t - s   : provide site or altitude as a string : LSST/OHP/PDM/OMK/OSL or altitude in km like akm_2.663, optional, default LSST')
-    print(' \t - v   : activate libradtran output verbose mode, optional, default no verbose mode')
-    
+    print(' \t - oz  : ozone in Dobson units from 200 DU to 400 DU')
+    print(' \t - p   : Pressure in hPa, typical P=775.3 hPa  ')
+    print(' \t - c   : Cloud vertical optical depth, typical c=0')
+    print(' \t - m   : Atmospheric model, typical m=\'us\' ')
+    print(' \t - q   : Interaction processes, typical q=\'sa\' for scattering and absorption')
+    print(' \t - s   : provide site or altitude as a string : LSST/OHP/PDM/OMK/OSL or altitude in km like akm_2.663')
+    print(' \t - v   : activate libradtran output verbose mode')
+    print(' \t - t   : thermal output selected among (brightness,radiance,irradiance,irradiance_integrated,transmisstance). Optional. Default brightness')
+                           
     print('\t Examples : ')
-    print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -s LSST')
-    print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -c 0 -p 742 -m us -q sa -s LSST')
+    print('\t \t 1) python libsimulateThermal.py -z 1 -w 0 -o 0 -s LSST')
+    print('\t \t 2) python libsimulateThermal.py -z 1 -w 4 -o 300 -c 0 -p 742 -m us -q sa -s LSST -t irradiance')
     
     print('\t To generate ascii printout of the used atmospheric model tables in a log file :')
-    print('\t \t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -s LSST >& output.log')
+    print('\t \t python libsimulateThermal.py -v -z 1 -w 0 -o 0 -s LSST >& output.log')
     
     print('\t Actually provided : ')
     print('\t \t Number of arguments:', len(sys.argv), 'arguments.')
@@ -133,21 +144,22 @@ def usageaer():
     print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc> -s<altitude> -v<verbose-flag>')
     print(' \t - z   : airmass from 1.0 to 3.0, typical z=1 ')
     print(' \t - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm')
-    print(' \t - oz  : ozone in Dobson units, typically  from 100 DU to 600 DU')
+    print(' \t - oz  : ozone in Dobson units from 200 DU to 400 DU')
     print(' \t - aer : Aerosols vertical optical depth, typical a=0.04')
-    print(' \t - p   : Pressure in hPa, typical P=775.3 hPa, optional, can be set to 0 to get the standard pressure at that site  ')
-    print(' \t - c   : Cloud vertical optical depth,optional ,typical c=0')
-    print(' \t - m   : Atmospheric model, optional, typical m=\'us\' ')
-    print(' \t - q   : Interaction processes, optional ,typical q=\'sa\' for scattering and absorption')
-    print(' \t - s   : provide site or altitude : LSST/OHP/PDM/OMK/PDM or altitude in km like akm_2.663, optional, default is LSST')
-    print(' \t - v   : activate libradtran output verbose to get atmospheric profile, optional, default no verbose mode')
+    print(' \t - p   : Pressure in hPa, typical P=775.3 hPa  ')
+    print(' \t - c   : Cloud vertical optical depth, typical c=0')
+    print(' \t - m   : Atmospheric model, typical m=\'us\' ')
+    print(' \t - q   : Interaction processes, typical q=\'sa\' for scattering and absorption')
+    print(' \t - s   : provide site or altitude : LSST/OHP/PDM/OMK/PDM or altitude in km like akm_2.663')
+    print(' \t - v   : activate libradtran output verbose to get atmospheric profile')
+    print(' \t - t   : thermal output selected among (brightness,radiance,irradiance,irradiance_integrated,transmisstance). Optional. Default brightness')
    
     print('\t Examples : ')
-    print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0 -s LSST')
-    print('\t \t 2) python libsimulateVisible.py -z 1 -w 4 -o 300 -a 0.3 -c 0 -p 742 -m us -q sa -s LSST')
+    print('\t \t 1) python libsimulateThermal.py -z 1 -w 0 -o 0 -a 0 -s LSST')
+    print('\t \t 2) python libsimulateThermal.py -z 1 -w 4 -o 300 -a 0.3 -c 0 -p 742 -m us -q sa -s LSST -t irradiance')
     
     print('\t To generate ascii printout of the used atmospheric model table in a log file :')
-    print('\t python libsimulateVisible.py -v -z 1 -w 0 -o 0 -s LSST >& output.log')
+    print('\t python libsimulateThermal.py -v -z 1 -w 0 -o 0 -s LSST >& output.log')
     #python libsimulateVisible.py -v -z 1 -w 0 -o 0 -s LSST >& output.log
 
     print('\t Actually provided : ')
@@ -155,37 +167,9 @@ def usageaer():
     print('\t \t Argument List:', str(sys.argv))
     print("*******************************************************************")
 
-#----------------------------------------------------------------------------
-def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
-    """
-     ApplyAerosols(wl,tr,thelambda0,tau0,alpha0)
-     Function to provide the aerosol transmission from an analytical formula
-     
-     Parameters:
+#-----------------------------------------------------------------------
 
-     :param wl: np array of wavelengths
-     :type wl: float in nm unit
-     :param tr: transparency array without aerosols, by example the one calculated by libRadtran
-     :type tr: float
-     :param thelambda0: the reference point where to have tau0 in nm
-     :type thelambda0: float in nm unit
-     :param tau0: is the extinction at thelambda0
-     :type tau0: float
-     :param alpha0: the Angstrom exponent
-     :type alpha0: float
-     :returns: array of aerosol transmission
-     :rtype: float 
-    """
-    #extinc_aer=tau0*(thelambda0/wl)**alpha0
-    extinc_aer=tau0*np.power(wl/thelambda0,-alpha0)
-    tr_aer=np.exp(-extinc_aer)
-    tr_tot=tr*tr_aer
-    return tr_tot
-    
-    
-#-----------------------------------------------------------------------------
-
-def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, altitude_str ="LSST",FLAG_VERBOSE=False):
+def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, altitude_str ="LSST",FLAG_VERBOSE=False,thermal_output="brightness"):
     """
     ProcessSimulation(airmass_num,pwv_num,oz_num) 
     Function to simulate air transparency.
@@ -193,7 +177,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     
     Parameters:
 
-    :param airmass_num: airmass
+    :param airmass_num: airmass, useless in thermal mode
     :type airmass_num: float, unitless
 
     :param pwv_num: precipitable water vapor 
@@ -223,13 +207,24 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     :param FLAG_VERBOSE: flag to activate libradtran verbose mode that print all the table generated
     :type FLAG_VERBOSE: bool
 
+    :param thermal_output: select the kind of output for thermal mode, default set to brightness
+    :type thermal_output: string among (brightness, irradiance, integrated_irradiance, radiance, transmittance)
+
     :returns: OUTPUTDIR,outputFilename, path and filename of datafile containing the simulated data     
     :rtype: two strings
+
+
+
     """
 
+    FLAG_BRIGHTNESS = False
+    FLAG_IRRADIANCE = False
+    FLAG_IRRADIANCE_INTEGRATED = False
+    FLAG_RADIANCE = False
+    FLAG_TRANSMITTANCE = False
 
     if FLAG_DEBUG:
-        print('--------------- ProcessSimulation -----------------------------')
+        print('--------------- ProcessSimulation input args -----------------------------')
         print(' 1) airmass = ', airmass_num)
         print(' 2) pwv = ', pwv_num)
         print(' 3) oz = ', oz_num)
@@ -238,6 +233,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         print(' 6) interaction processes = ',proc_str)
         print(' 7) cloud extinction = ',cloudext)
         print(' 8) site or altitude = ', altitude_str)
+        print(' 9) thermal output required',thermal_output)
         print('--------------------------------------------')
 
    
@@ -261,6 +257,32 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
 
     if FLAG_DEBUG:
         print(f"Observation site altitude for libradran sim : {OBS_Altitude} km")
+    
+    # set thermal mode
+
+
+    thermal_output_uppercase = thermal_output.upper()
+
+    if thermal_output_uppercase == List_Of_Thermal_Outputs[0]:
+        FLAG_BRIGHTNESS = True
+    elif thermal_output_uppercase == List_Of_Thermal_Outputs[1]:
+        FLAG_RADIANCE = True
+    elif thermal_output_uppercase == List_Of_Thermal_Outputs[2]:
+        FLAG_IRRADIANCE = True
+    elif thermal_output_uppercase == List_Of_Thermal_Outputs[3]:
+        FLAG_IRRADIANCE_INTEGRATED = True
+    elif thermal_output_uppercase == List_Of_Thermal_Outputs[4]:
+        FLAG_TRANSMITTANCE = True  
+    else:
+        msg = f"Bad thermal output selection {thermal_output}"
+        raise Exception(msg) 
+
+    
+
+    if not (FLAG_BRIGHTNESS or FLAG_IRRADIANCE or FLAG_IRRADIANCE_INTEGRATED or FLAG_RADIANCE or FLAG_TRANSMITTANCE):
+        msg = f"No thermal output selection provided {thermal_output}"
+        raise Exception(msg)
+
     
     # set the interaction process
     
@@ -410,11 +432,11 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         #uvspec.inp["atmosphere_file"] = libradtranpath+'data/atmmod/'+atmosphere+'.dat'
         uvspec.inp["atmosphere_file"] = libradtrandatapath+'/atmmod/'+atmosphere+'.dat'
         # arbitrary earth albedo
-        uvspec.inp["albedo"]           = '0.2'
+        uvspec.inp["albedo"]           = '0.0'
     
         uvspec.inp["rte_solver"] = rte_eq
              
-        if Mod == 'rtvis':
+        if Mod == 'rtthermal':
             uvspec.inp["mol_abs_param"] = molmodel + ' ' + molresol
         else:
             uvspec.inp["mol_abs_param"] = molmodel
@@ -447,15 +469,46 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         uvspec.inp["ic_properties"] = "yang"
         uvspec.inp["ic_modify"] = "tau set "+str(cloudext)
 
-        uvspec.inp["output_user"] = 'lambda edir'
+        
         uvspec.inp["altitude"] = OBS_Altitude   # Altitude  observatory
-        uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
+       
+        # in visible mode
+        #uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
         #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_1.0nm.dat'
         #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_0.1nm.dat'
-        uvspec.inp["sza"]        = str(sza)
-        uvspec.inp["phi0"]       = '0'
-        uvspec.inp["wavelength"]       = '250.0 1200.0'
-        uvspec.inp["output_quantity"] = 'reflectivity' #'transmittance' #
+        #uvspec.inp["output_user"] = 'lambda edir' in vis
+        #uvspec.inp["sza"]        = str(sza) in vis
+        #uvspec.inp["phi0"]       = '0'   in vis
+        #uvspec.inp["wavelength"]       = '250.0 1200.0'
+        #uvspec.inp["output_quantity"] = 'reflectivity' #'transmittance' #
+
+        # in thermal mode
+        uvspec.inp["source"] = 'thermal '
+        
+        if FLAG_BRIGHTNESS:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_quantity"] = 'brightness'
+        elif FLAG_IRRADIANCE:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_process"] =  "per_nm"
+        elif FLAG_IRRADIANCE_INTEGRATED:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"] = '7500 13500'
+            uvspec.inp["output_process"] = "sum"
+        elif FLAG_RADIANCE:
+            uvspec.inp["umu"] = '-1. -0.9 -0.8 -0.7 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1'
+            #uvspec.inp["umu"] = '-1. -0.8 -0.6 -0.4 -0.2'
+            uvspec.inp["output_user"] = 'lambda uu'
+            uvspec.inp["wavelength"]     = '2500 100000.0'
+            uvspec.inp["output_process"] =  "per_nm"
+        elif FLAG_TRANSMITTANCE:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_quantity"] = 'reflectivity'
+        
+        
         if FLAG_VERBOSE:
             uvspec.inp["verbose"] = ''
         else:
@@ -492,14 +545,14 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
 
 
 #------------------------------------------------------------------------------
-def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, altitude_str='LSST',FLAG_VERBOSE=False):
+def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, altitude_str='LSST',FLAG_VERBOSE=False,thermal_output="brightness"):
     """
     ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num) 
     with aerosol simulation is performed
     
     Parameters:
 
-    :param airmass_num: airmass
+    :param airmass_num: airmass, useless in thermal mode
     :type airmass_num: float, unitless
 
     :param pwv_num: precipitable water vapor 
@@ -529,14 +582,24 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     :param altitude_str: observation site predefined (either the site name abrebiation (LSST/CTIO,OMP,OMK,MSL) or the string on altitude like akm_2.663)
     :type altitude: string
 
+    :param thermal_output: thermal output required from libradtran among (brightness, radiance, irradiance, irradiance_integrated, transmittance)
+    :type thermal_output: string, optional
+
     :param FLAG_VERBOSE: flag to activate libradtran verbose mode that print all the table generated
     :type FLAG_VERBOSE: bool
+
+    :param thermal_output: select the kind of output for thermal mode, default set to brightness
+    :type thermal_output: string among (brightness, irradiance, integrated_irradiance, radiance, transmittance)
     
     :returns: OUTPUTDIR,outputFilename, path and filename of datafile containing the simulated data     
     :rtype: two strings
     """
 
-    
+    FLAG_BRIGHTNESS = False
+    FLAG_IRRADIANCE = False
+    FLAG_IRRADIANCE_INTEGRATED = False
+    FLAG_RADIANCE = False
+    FLAG_TRANSMITTANCE = False
  
     if FLAG_DEBUG:
         print('------------- ProcessSimulationaer -------------------------------')
@@ -549,6 +612,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
         print(' 7) interaction processes = ',proc_str)
         print(' 8) cloud extinction = ',cloudext)
         print(' 9) site or altitude = ', altitude_str)
+        print('10) thermal output required',thermal_output)
         print('--------------------------------------------')
     
 
@@ -573,6 +637,29 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     if FLAG_DEBUG:
         print(f"Observation site altitude for libradran sim : {OBS_Altitude} km")
     
+    thermal_output_uppercase = thermal_output.upper()
+
+    if thermal_output_uppercase == List_Of_Thermal_Outputs[0]:
+        FLAG_BRIGHTNESS = True
+    elif thermal_output_uppercase == List_Of_Thermal_Outputs[1]:
+        FLAG_RADIANCE = True
+    elif thermal_output_uppercase == List_Of_Thermal_Outputs[2]:
+        FLAG_IRRADIANCE = True
+    elif thermal_output_uppercase == List_Of_Thermal_Outputs[3]:
+        FLAG_IRRADIANCE_INTEGRATED = True
+    elif thermal_output_uppercase == List_Of_Thermal_Outputs[4]:
+        FLAG_TRANSMITTANCE = True  
+    else:
+        msg = f"Bad thermal output selection {thermal_output}"
+        raise Exception(msg) 
+
+
+    if not (FLAG_BRIGHTNESS or FLAG_IRRADIANCE or FLAG_IRRADIANCE_INTEGRATED or FLAG_RADIANCE or FLAG_TRANSMITTANCE):
+        msg = f"No thermal output selection provided {thermal_output}"
+        raise Exception(msg)
+
+
+
     #Proc='sa'  # Pure absorption and Rayleigh scattering : Clear sky without aerosols
     if proc_str in ["sa","ab","sc","as","ae"]:
         Proc=proc_str
@@ -731,7 +818,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
         uvspec.inp["atmosphere_file"] = libradtrandatapath+'/atmmod/'+atmosphere+'.dat'
         
         # choose arbitrary earth albedo
-        uvspec.inp["albedo"]           = '0.2'
+        uvspec.inp["albedo"]           = '0.0'
     
         uvspec.inp["rte_solver"] = rte_eq
               
@@ -772,15 +859,43 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
         uvspec.inp["ic_properties"] = "yang"
         uvspec.inp["ic_modify"] = "tau set " + str(cloudext)
 
-        uvspec.inp["output_user"] = 'lambda edir'
         uvspec.inp["altitude"] = OBS_Altitude   # Altitude LSST observatory
-        uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
-        #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_1.0nm.dat'
-        #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_0.1nm.dat'
-        uvspec.inp["sza"]        = str(sza)
-        uvspec.inp["phi0"]       = '0'
-        uvspec.inp["wavelength"]       = '250.0 1200.0'
-        uvspec.inp["output_quantity"] = 'reflectivity' #'transmittance' #
+
+        # visible
+        #uvspec.inp["output_user"] = 'lambda edir'
+        #uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
+        #uvspec.inp["sza"]        = str(sza)
+        #uvspec.inp["phi0"]       = '0'
+        #uvspec.inp["wavelength"]       = '250.0 1200.0'
+        #uvspec.inp["output_quantity"] = 'reflectivity' #'transmittance' #
+
+        # in thermal mode
+        uvspec.inp["source"] = 'thermal '
+
+        if FLAG_BRIGHTNESS:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_quantity"] = 'brightness'
+        elif FLAG_IRRADIANCE:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_process"] =  "per_nm"
+        elif FLAG_IRRADIANCE_INTEGRATED:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"] = '7500.0 13500.0'
+            uvspec.inp["output_process"] = "sum"
+        elif FLAG_RADIANCE:
+            #uvspec.inp["umu"] = '-1. -0.9 -0.8 -0.7 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1'
+            uvspec.inp["umu"] = '-1. -0.8 -0.6 -0.4 -0.2'
+            uvspec.inp["output_user"] = 'lambda uu'
+            uvspec.inp["wavelength"]     = '2500 100000.0'
+            uvspec.inp["output_process"] =  "per_nm"
+            
+        elif FLAG_TRANSMITTANCE:
+            uvspec.inp["output_user"] = 'lambda edn'
+            uvspec.inp["wavelength"]       = '2500 100000.0'
+            uvspec.inp["output_quantity"] = 'reflectivity'
+
 
         if FLAG_VERBOSE:
             uvspec.inp["verbose"] = ''
@@ -856,6 +971,9 @@ if __name__ == "__main__":
 
     # altitude or site string
     alt_str=""
+
+    # thermal output put default 
+    therm_str="brightness"
     
     # Case No Aerosols
     # airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0
@@ -863,9 +981,9 @@ if __name__ == "__main__":
     # No aerosol, just call function ProcessSimulation()
     if AerosolTest_Flag == False:
         try:
-            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:p:c:m:q:s:",["z=","w=","o=","p=","c=","m=","q=","s="])
+            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:p:c:m:q:s:t:",["z=","w=","o=","p=","c=","m=","q=","s=","t="])
         except getopt.GetoptError:
-            print(' Exception bad getopt with :: '+sys.argv[0]+ ' [-v] -z <airmass> -w <pwv> -o <oz> -p <press> -c <cldvod> -m <atmmodel> -q <interactproc> -s<altitudesite-string>')
+            print(' Exception bad getopt with :: '+sys.argv[0]+ ' [-v] -z <airmass> -w <pwv> -o <oz> -p <press> -c <cldvod> -m <atmmodel> -q <interactproc> -s<altitudesite-string> -t<thermal-response> ')
             sys.exit(2)
         
     
@@ -896,7 +1014,8 @@ if __name__ == "__main__":
                 proc_str = arg
             elif opt in ("-s", "--site"):
                 alt_str = arg
-
+            elif opt in ("-t", "--thermal"):
+                therm_str = arg
             else:
                 print('Do not understand arguments : ',sys.argv)
             
@@ -912,6 +1031,7 @@ if __name__ == "__main__":
         print("8) alt/site = ",alt_str)
         print("9) FLAG_VERBOSE = ",FLAG_VERBOSE)
         print("10) FLAG_DEBUG = ",FLAG_DEBUG)
+        print("11) Thermal response = ",therm_str)
         print('--------------------------------------------')
 
         # mandatory arguments
@@ -942,15 +1062,18 @@ if __name__ == "__main__":
         if press_str=="":
             #this force to use pressure of the altitude
             press_str="0.0"
+
         press_nb=float(press_str)
           
         # cloud
         if cld_str=="":
-            cld_str = "0"    
+            cld_str = "0.0"    
         cld_nb = float(cld_str)
         
         if model_str=="":
             model_str="us"
+
+
         if proc_str=="":
             proc_str="sa"
         
@@ -980,19 +1103,23 @@ if __name__ == "__main__":
             sys.exit()
               
         if press_nb<0 or press_nb >1500 :
-            print("bad Pressure value : press=",press_nb)
+            print("bad Pressure value : press = ",press_nb)
             sys.exit()
         
         if cld_nb<0 or cld_nb >100 :
-            print("bad cloud optical depth value : cld=",cld_nb)
+            print("bad cloud optical depth value : cld = ",cld_nb)
             sys.exit()
-        
-        
+
+        if therm_str.upper() not in List_Of_Thermal_Outputs:
+            print("bad thermal response selected : thermal response = ",therm_str)
+            print("among :",List_Of_Thermal_Outputs)
+            sys.exit()
+
         # do the simulation now 
         print("all arguments values are OK, start libradtran simulation")
         
         #ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
-        path, outputfile=ProcessSimulation(airmass_nb,pwv_nb,oz_nb,press_nb,model_str,proc_str=proc_str,cloudext=cld_nb ,altitude_str=alt_str,FLAG_VERBOSE=FLAG_VERBOSE)
+        path, outputfile=ProcessSimulation(airmass_nb,pwv_nb,oz_nb,press_nb,model_str,proc_str=proc_str,cloudext=cld_nb ,altitude_str=alt_str,FLAG_VERBOSE=FLAG_VERBOSE,thermal_output=therm_str)
     
         print('*****************************************************')
         print(' path       = ', path)
@@ -1002,13 +1129,11 @@ if __name__ == "__main__":
     # With aerosol, just call function ProcessSimulationaer()
     else:
         try:
-            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:a:p:c:m:q:s:",["z=","w=","o=","a=","p=","c=","m=","q=","s="])
+            opts, args = getopt.getopt(sys.argv[1:],"hvz:w:o:a:p:c:m:q:s:t:",["z=","w=","o=","a=","p=","c=","m=","q=","s=","t="])
         except getopt.GetoptError:
-            print(' Exception bad getopt with :: '+sys.argv[0]+ ' -z <airmass> -w <pwv> -o <oz> -a <aer> -p <press> -c <cldvod>-m <model> -q <interaction> -s <altitude-string>')
+            print(' Exception bad getopt with :: '+sys.argv[0]+ ' -z <airmass> -w <pwv> -o <oz> -a <aer> -p <press> -c <cldvod>-m <model> -q <interaction> -s <altitude-string> -t<thermal-response>')
             sys.exit(2)
-        
-    
-        
+           
         print('opts = ',opts)
         print('args = ',args)
         
@@ -1038,6 +1163,8 @@ if __name__ == "__main__":
                 proc_str = arg
             elif opt in ("-s", "--site"):
                 alt_str = arg
+            elif opt in ("-t", "--thermal"):
+                therm_str = arg
             else:
                 print('Do not understand arguments : ',sys.argv)
             
@@ -1054,6 +1181,7 @@ if __name__ == "__main__":
         print("9) alt/site = ",alt_str)
         print("10) FLAG_VERBOSE = ",FLAG_VERBOSE)
         print("11) FLAG_DEBUG = ",FLAG_DEBUG)
+        print("12) Thermal response = ",therm_str)
         print('--------------------------------------------')
 
         # mandatory arguments
@@ -1142,11 +1270,14 @@ if __name__ == "__main__":
             print("bad cloud optical depth value : cld=",cld_nb)
             sys.exit()
         
-        
+        if therm_str.upper() not in List_Of_Thermal_Outputs:
+            print("bad thermal response selected : thermal response=",therm_str)
+            sys.exit()
+
         # do the simulation now 
         print("values are OK")
         #ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, FLAG_VERBOSE=False):
-        path, outputfile=ProcessSimulationaer(airmass_nb,pwv_nb,oz_nb,aer_nb,press_nb,model_str,proc_str,cloudext=cld_nb,altitude_str=alt_str,FLAG_VERBOSE=FLAG_VERBOSE)
+        path, outputfile=ProcessSimulationaer(airmass_nb,pwv_nb,oz_nb,aer_nb,press_nb,model_str,proc_str,cloudext=cld_nb,altitude_str=alt_str,FLAG_VERBOSE=FLAG_VERBOSE,thermal_output=therm_str)
     
         print('*****************************************************')
         print(' path       = ', path)
