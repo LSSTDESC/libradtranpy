@@ -185,7 +185,7 @@ path,thefile = libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pres
 
 **path,thefilename** are the path and filename of the output ascii file.
 
-The result of the simulation can be obtaiend by:
+The result of the simulation can be obtained in a python environnement by:
 
 ```python
 data = np.loadtxt(os.path.join(path,thefile))
@@ -201,7 +201,16 @@ to the ``libradtranpy`` package documentation.
 
 A more detailed series of examples are given in the extensive notebook series in [docs/notebooks/intro_notebook.ipynb](docs/notebooks/intro_notebook.ipynb), showing a numberous use-cases of ``libradtranpy`` and a set of tools on atmospher to control its output. 
 
-Another source of documentation can be found on the documentation repository [readthedocs](https://libradtranpy.readthedocs.io/en/latest/)
+Another source of documentation can be found on the documentation repository [readthedocs](https://libradtranpy.readthedocs.io/en/latest/).
+
+(Note that **readthedocs** has not compiled the API because it doesn't install ``libRadtran`` itself. However the user can compile **the docs**
+on his computer by doing:)
+
+```bash
+>> cd docs
+>> make html
+```
+and open the doc from file ``libradtranpy/_readthedocs/html/index.html``.
 
 
 ## Dev installation Guide from LINCC-Frameworks - Getting Started with python project template
