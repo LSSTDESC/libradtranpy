@@ -4,18 +4,13 @@ Tests of installation
 Test of libRadtran installation
 -------------------------------
 
+``libRadtran`` must be installed according the instructions given at 
+`libRadtran web site <http://www.libradtran.org/>`_ .
 
 
-The atmospheric simulation LibRadTran for multiple site (different altitudes) must be installed according the instruction given in 
-http://www.libradtran.org/doku.php
-
-This documentation assumes libradtran version 2.0.5 is installed on your computer (version July 2023)
-
-
-#### To use libradtran inside librandtranpy wrapper
-
-
-Environnement variable **LIBRADTRANDIR** must be set to ``libRadtran`` installation path under which one have each of these directories:
+In addition ``libradtranpy`` requires that one
+environnement variable **LIBRADTRANDIR** must be set to ``libRadtran`` installation path,
+under which one have each of these directories:
 
 * /bin 
 * /share/libRadtran/data
@@ -75,7 +70,8 @@ and inside the ``data/`` directory you must have *libRadtran data* installed as 
 libradtranpy tests
 ------------------
 
-After ``libRadtran and libradtranpy installation``, a simple test to check if libradtran is installed correctly runs:
+After ``libRadtran and libradtranpy installation`` (using the command ``pip install -e '.[dev]'``), 
+a simple test to check if libradtran is installed correctly runs:
 
 
 | # call unit tests
