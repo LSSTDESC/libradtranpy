@@ -74,6 +74,14 @@ Dict_Of_sitesPressures = {'LSST':731.50433,
                           'OSL':1013.000,
                         }
 
+Dict_Of_sitesTags = {'LSST':'LS',
+                     'CTIO':'CT',
+                     'OHP':'OH',
+                     'PDM':'PM',
+                     'OMK':'MK',
+                     'OSL':'SL',
+                    }
+
 # july 2023 libradtran version
 TOPTOPDIR=f"simulations/RT/{libradtranvers}/"
 
@@ -98,13 +106,13 @@ def usage():
     print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -p <P> -c <cld> -m<mod> -q<proc> -s<site-string> -v<verbose-flag>')
     print(' \t - z   : airmass from 1.0 to 3.0, typical z=1 ')
     print(' \t - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm')
-    print(' \t - oz  : ozone in Dobson units from 200 DU to 400 DU')
-    print(' \t - p   : Pressure in hPa, typical P=775.3 hPa  ')
-    print(' \t - c   : Cloud vertical optical depth, typical c=0')
-    print(' \t - m   : Atmospheric model, typical m=\'us\' ')
-    print(' \t - q   : Interaction processes, typical q=\'sa\' for scattering and absorption')
-    print(' \t - s   : provide site or altitude as a string : LSST/OHP/PDM/OMK/OSL or altitude in km like akm_2.663')
-    print(' \t - v   : activate libradtran output verbose mode')
+    print(' \t - oz  : ozone in Dobson units, typically from 100 DU to 600 DU')
+    print(' \t - p   : Pressure in hPa, typical P=775.3 hPa, optional, may provide 0 to choose the standard pressure at the selected obs site')
+    print(' \t - c   : Cloud vertical optical depth, optional, typical c=0')
+    print(' \t - m   : Atmospheric model, optional ,typical m=\'us\' ')
+    print(' \t - q   : Interaction processes, optional, typical q=\'sa\' for scattering and absorption')
+    print(' \t - s   : provide site or altitude as a string : LSST/OHP/PDM/OMK/OSL or altitude in km like akm_2.663, optional, default LSST')
+    print(' \t - v   : activate libradtran output verbose mode, optional, default no verbose mode')
     
     print('\t Examples : ')
     print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -s LSST')
@@ -125,14 +133,14 @@ def usageaer():
     print(sys.argv[0],' [-v] -z <airmass> -w <pwv> -o <oz> -a<aer> -p <P> -c <cld> -m<mod> -q<proc> -s<altitude> -v<verbose-flag>')
     print(' \t - z   : airmass from 1.0 to 3.0, typical z=1 ')
     print(' \t - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm')
-    print(' \t - oz  : ozone in Dobson units from 200 DU to 400 DU')
+    print(' \t - oz  : ozone in Dobson units, typically  from 100 DU to 600 DU')
     print(' \t - aer : Aerosols vertical optical depth, typical a=0.04')
-    print(' \t - p   : Pressure in hPa, typical P=775.3 hPa  ')
-    print(' \t - c   : Cloud vertical optical depth, typical c=0')
-    print(' \t - m   : Atmospheric model, typical m=\'us\' ')
-    print(' \t - q   : Interaction processes, typical q=\'sa\' for scattering and absorption')
-    print(' \t - s   : provide site or altitude : LSST/OHP/PDM/OMK/PDM or altitude in km like akm_2.663')
-    print(' \t - v   : activate libradtran output verbose to get atmospheric profile')
+    print(' \t - p   : Pressure in hPa, typical P=775.3 hPa, optional, can be set to 0 to get the standard pressure at that site  ')
+    print(' \t - c   : Cloud vertical optical depth,optional ,typical c=0')
+    print(' \t - m   : Atmospheric model, optional, typical m=\'us\' ')
+    print(' \t - q   : Interaction processes, optional ,typical q=\'sa\' for scattering and absorption')
+    print(' \t - s   : provide site or altitude : LSST/OHP/PDM/OMK/PDM or altitude in km like akm_2.663, optional, default is LSST')
+    print(' \t - v   : activate libradtran output verbose to get atmospheric profile, optional, default no verbose mode')
    
     print('\t Examples : ')
     print('\t \t 1) python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0 -s LSST')
@@ -238,6 +246,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     if altitude_str in Dict_Of_sitesAltitudes.keys():    
         altitude_num = Dict_Of_sitesAltitudes[altitude_str]
         altitude_dir = altitude_str
+        Obs = Dict_Of_sitesTags[altitude_str] # for the path of input/output
     elif altitude_str[:4] == "akm_":
         height_str = altitude_str[4:]
         altitude_num = float(height_str)
@@ -548,6 +557,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     if altitude_str in Dict_Of_sitesAltitudes.keys():  
         altitude_num = Dict_Of_sitesAltitudes[altitude_str]
         altitude_dir = altitude_str
+        Obs = Dict_Of_sitesTags[altitude_str] # for the path of input/output
     elif altitude_str[:4] == "akm_":
         height_str = altitude_str[4:]
         altitude_num = float(height_str)

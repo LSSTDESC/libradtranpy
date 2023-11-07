@@ -567,6 +567,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     if altitude_str in Dict_Of_sitesAltitudes.keys():  
         altitude_num = Dict_Of_sitesAltitudes[altitude_str]
         altitude_dir = altitude_str
+        Obs = Dict_Of_sitesTags[altitude_str] # for the path of input/output
     elif altitude_str[:4] == "akm_":
         height_str = altitude_str[4:]
         altitude_num = float(height_str)

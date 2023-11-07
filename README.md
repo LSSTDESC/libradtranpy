@@ -39,9 +39,21 @@ This package is maintained through the tool LINCC Frameworks Python Project Temp
 
 ### run tests
 
+A simple test to check if libradtran is installed correctly runs:
+
     python -m unittest tests/libradtranpy/*.py
+
+or in verbose mode:
+
+    python -m unittest -v tests/libradtranpy/test_libsimulateVisible.py
+
+it checks:
+- the existence of the environnement variable `LIBRADTRANDIR` point to the libradtran installation top directory
+- the existence of the `bin` directory and the executable `uvspec`
+- the existence of the `data` directory which hold all the internal data that `libRadtran`requires for its execution.   
+- the execution of a libradtran simulation works well returning some data. 
        
-## Use  libradtranpy
+## Standard Use of libradtranpy
 
 
 ### Use in the shell
@@ -54,8 +66,8 @@ if **libradtranpy/src/libradtranpy/libsimulateVisible.py** is in the python path
  	 - pwv : precipitable watr vapor in kg per m2 or mm, typical pwv = 5.18 mm
  	 - oz  : ozone in Dobson units from 200 DU to 400 DU
  	 - aer : Aerosols vertical optical depth, typical a=0.04
- 	 - p   : Pressure in hPa, typical P=775.3 hPa  
- 	 - c   : Cloud vertical optical depth, typical c=0
+ 	 - p   : Pressure in hPa, typical P=775.3 hPa, optional  
+ 	 - c   : Cloud vertical optical depth, optional ,typical c=0
  	 - m   : Atmospheric model, typical m='us' 
  	 - q   : Interaction processes, typical q='sa' for scattering and absorption
      - s   : Observation site : LSST, CTIO, ....  
@@ -66,6 +78,10 @@ if **libradtranpy/src/libradtranpy/libsimulateVisible.py** is in the python path
 	 To generate ascii printout of the used atmospheric model table in a log file :
 	 	 python libsimulateVisible.py -v -z 1 -w 0 -o 0 -a 0 -s LSST >& output.log
 	 
+By example just run the following command in the shell:
+     
+    python libsimulateVisible.py -z 1 -w 0 -o 0 -a 0 -s LSST 
+
 
 ### Outputs of libradtran
 

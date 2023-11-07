@@ -13,10 +13,27 @@ class libsimulateVisible(unittest.TestCase):
 
     def test_libradtranenvironment(self):
         """
-        test if LIBRADTRANDIR is defined
+        test if LIBRADTRANDIR environnement variable is defined
         """
         var = 'LIBRADTRANDIR'
         self.assertTrue(var in os.environ)
+
+    def test_libradtranuvspecexecpath(self):
+        """
+        test if libRadtran uvspec executable exists
+        """
+        libradtranpath = os.getenv('LIBRADTRANDIR')+ '/'
+        libradtranbinpath = libradtranpath + "/bin"
+        libradtranexecutablepath = os.path.join(libradtranbinpath,'uvspec')
+        self.assertTrue(os.path.exists(libradtranexecutablepath))
+
+    def test_libradtrandatapath(self):
+        """
+        test if libradtran data-path exists
+        """
+        libradtranpath = os.getenv('LIBRADTRANDIR')+ '/'
+        libradtrandatapath = libradtranpath + "/share/libRadtran/data"
+        self.assertTrue(os.path.exists(libradtrandatapath))
 
     def test_ProcessSimulation_outputfilename(self):
         """
