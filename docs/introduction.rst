@@ -7,7 +7,7 @@ Goal
 This package provides a simplified python library package called ``libradtranpy``` 
 to access easily to ``libRadtran`` by offering a simplified user interface library to ``libRadtran``.
 
-`libRadtran`` is library for radiative transfer providing a collection of C and Fortran 
+``libRadtran`` is library for radiative transfer providing a collection of C and Fortran 
 functions and programs for calculation of solar and thermal radiation in the Earth's atmosphere. libRadtran is freely available under the GNU General Public License.
 The main Authors are Bernhard Mayer, Claudia Emde, Josef Gasteiger, and Arve Kylling. 
 ``LibRadtran`` simulation package can be downloaded from the 
