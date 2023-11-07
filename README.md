@@ -112,14 +112,14 @@ it checks:
 ## Standard Use of libradtranpy interface
 
 Two libRadtran running modes are available:
-- visible mode from wavelength range : 250.0 nm -  1200.0 nm
-- thermal mode from wavelength range : 2500 nm -  100000.0 nm
+- ``visible mode`` from **wavelength** range : **250.0 nm -  1200.0 nm**
+- ``thermal mode`` from **wavelength** range : **2500 nm -  100000.0 nm**
 
 (these ranges are hardcoded, but it will be configurable in future).
 
 Then whe have two interface modules for these modes : 
-- **libradtranpy.libsimulateVisible.py** for the visible mode,
-- **libradtranpy.libsimulateThermal.py** for the thermal mode.
+- **libradtranpy.libsimulateVisible.py** for the ``visible mode``,
+- **libradtranpy.libsimulateThermal.py** for the ``thermal mode``.
 
 
 ### Use in the shell
