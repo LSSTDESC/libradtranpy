@@ -1,7 +1,6 @@
 # libradtranpy : a libradtran python wrapper
 
 
-
 ## Installation
 
 ### Installation of libradtran
@@ -15,13 +14,36 @@ This documentation assumes libradtran version 2.0.5 is installed on your compute
 ### To use libradtran inside librandtranpy wrapper
 
 
-Environnement variable **LIBRADTRANDIR** must be set to libradtran installation path under which one have /bin /data /include /lib and /share of libradtran installation directory. 
+Environnement variable **LIBRADTRANDIR** must be set to libradtran installation path under which one have each of these directories:
+
+- /bin 
+- /share/libratran/data
+- /include 
+- /lib and 
+- /share 
+
+from libradtran installation directory. 
 
 example:
 
-	ls $LIBRADTRANDIR
-	bin                     data                    include                 	lib                     libRadtran-2.0.5        share
+/Users/dagoret/MacOSX/External>tree -L 1 libRadtran
+libRadtran
+├── bin
+├── include
+├── lib
+├── libRadtran-2.0.5
+└── share
 
+and the inside the share directory the data dir must be available:
+
+/Users/dagoret/MacOSX/External/libRadtran>tree -L 2 share/
+share/
+└── libRadtran
+    ├── GUI
+    ├── data
+    ├── doc
+    └── examples
+	
 
 ### Installation of libradtranpy
 
@@ -54,6 +76,16 @@ it checks:
 - the execution of a libradtran simulation works well returning some data. 
        
 ## Standard Use of libradtranpy
+
+Two libRadtran running modes are available:
+- visible mode from wavelength range : 250.0 nm -  1200.0 nm
+- thermal mode from wavelength range : 2500 nm -  100000.0 nm
+
+(these ranges are hardcoded, but it will be configurable in future).
+
+Then whe have two interface modules for these modes : 
+- **libradtranpy.libsimulateVisible.py** for the visible mode,
+- **libradtranpy.libsimulateThermal.py** for the thermal mode.
 
 
 ### Use in the shell
