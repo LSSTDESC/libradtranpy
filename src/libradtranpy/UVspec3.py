@@ -32,17 +32,37 @@ class UVspec:
         self.run(input,output,verbose)
         return
             
-    def run(self,inp, out, verbose,path=''):
-        if verbose:
-            print("Running uvspec with input file: ", inp)
-            print("Output to file                : ", out)
-            print("Path to exec                : ", path)
+    def run(self, verbose, path=''):
         if shutil.which("uvspec"):
             cmd = shutil.which("uvspec")
         elif path != '':
             cmd = os.path.join(path, 'bin/uvspec')
         else:
             raise OSError(f"uvspec executable not found in $PATH or {os.path.join(path, 'bin/uvspec')}")
+        if verbose:
+            print("uvspec cmd: ", cmd)
+        inputstr = '\n'.join([f'{name} {self.inp[name]}' for name in self.inp.keys()])
+        try:
+            if verbose:
+                print("Running uvspec with input file:\n", inputstr)
+            process = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     input=inputstr, encoding='ascii')
+            return np.genfromtxt(io.StringIO(process.stdout)).T
+        except subprocess.CalledProcessError as e:  # pragma: nocover
+            logging.warning(f"\n\tLibradtran input command:\n{inputstr}")
+            logging.error(f"\n\t{e.stderr}")
+            sys.exit()
+
+    def run_with_files(self,inp, out, verbose,path=''):
+        if verbose:
+            print("Running uvspec with input file: ", inp)
+            print("Output to file                : ", out)
+            print("Path to exec                : ", path)
+        if path != '':
+            cmd = path+'bin/uvspec '+  ' < ' + inp  +  ' > ' + out
+        else:
+            cmd = self.home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out
         if verbose:
             print("uvspec cmd: ", cmd)
 #        p   = call(cmd,shell=True,stdin=PIPE,stdout=PIPE)
