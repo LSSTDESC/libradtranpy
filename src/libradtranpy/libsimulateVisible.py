@@ -220,7 +220,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     :type cloudext: float, optional
 
     :param altitude_str: observation site predefined (either the site name abrebiation (LSST/CTIO,OMP,OMK,MSL) or the string on altitude like akm_2.663)
-    :type altitude: string
+    :type altitude_str: string
 
     :param FLAG_VERBOSE: flag to activate libradtran verbose mode that print all the table generated
     :type FLAG_VERBOSE: bool
@@ -255,8 +255,6 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         altitude_dir = height_str.replace(".","_")
     else:
         raise Exception(f"Bad altitude/site string {altitude_str}")
-        altitude_num = Dict_Of_sitesAltitudes['LSST']
-        altitude_dir = 'LSST0'
 
     # keep the altutude to write in input file
     OBS_Altitude = altitude_num
@@ -272,8 +270,10 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
    
     # set the selected atmosphere
     if prof_str in ["us","ms","mw","tp","ss","sw"]:
-        Atm=[prof_str]
-   
+        skyindex=prof_str
+    else:
+        raise ValueError(f'Unknown atmospheric profile {prof_str=}. Must be in ["us","ms","mw","tp","ss","sw"].')
+
     # create output dir
     TOPDIR = os.path.join(TOPTOPDIR,altitude_dir)
     ensure_dir(TOPDIR)
@@ -287,22 +287,16 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
 
     if Proc == 'sc':
         runtype='no_absorption'
-        outtext='no_absorption'
     elif Proc == 'ab':
         runtype='no_scattering'
-        outtext='no_scattering'
     elif Proc == 'sa':
-        runtype=='clearsky'
-        outtext='clearsky'
-    elif Proc == 'ae':   
+        runtype='clearsky'
+    elif Proc == 'ae':
         runtype='aerosol_default'
-        outtext='aerosol_default'
-    elif Proc == 'as':   
+    elif Proc == 'as':
         runtype='aerosol_special'
-        outtext='aerosol_special'
     else:
-        runtype=='clearsky'
-        outtext='clearsky'
+        runtype='clearsky'
 
 #   Selection of RTE equation solver        
     if Rte == 'pp': # parallel plan
@@ -325,170 +319,113 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         molmodel='fu'    
     if Mod == 'cr':
         molmodel='crs'     
-               
-    	  
-    # for simulation select only two atmosphere   
-    #theatmospheres = np.array(['afglus','afglms','afglmw','afglt','afglss','afglsw'])
-    atmosphere_map=dict()  # map atmospheric names to short names 
-    atmosphere_map['afglus']='us'
-    atmosphere_map['afglms']='ms'
-    atmosphere_map['afglmw']='mw'  
-    atmosphere_map['afglt']='tp'  
-    atmosphere_map['afglss']='ss'  
-    atmosphere_map['afglsw']='sw'  
+
+    if re.search('us',skyindex):
+        atmosphere = 'afglus'
+    if re.search('sw',skyindex):
+        atmosphere = 'afglsw'
+    if re.search('ss',skyindex):
+        atmosphere = 'afglss'
+    if re.search('mw',skyindex):
+        atmosphere = 'afglmw'
+    if re.search('ms',skyindex):
+        atmosphere = 'afglms'
+    if re.search('tp',skyindex):
+        atmosphere = 'afglt'
       
-    theatmospheres= []
-
-    for skyindex in Atm:
-        if re.search('us',skyindex):
-            theatmospheres.append('afglus')
-        if re.search('sw',skyindex):
-            theatmospheres.append('afglsw')
-        if re.search('ss',skyindex):
-            theatmospheres.append('afglss')
-        if re.search('mw',skyindex):
-            theatmospheres.append('afglmw')
-        if re.search('ms',skyindex):
-            theatmospheres.append('afglms')
-        if re.search('tp',skyindex):
-            theatmospheres.append('afglt')
-            
-    
-    # 1) LOOP ON ATMOSPHERE
-    for atmosphere in theatmospheres:
-        atmkey=atmosphere_map[atmosphere]
-       
-        # manage input and output directories and vary the ozone
-        TOPDIR2=TOPDIR+'/'+Rte+'/'+atmkey+'/'+Proc+'/'+Mod
-        ensure_dir(TOPDIR2)
-        INPUTDIR=TOPDIR2+'/'+'in'
-        ensure_dir(INPUTDIR)
-        OUTPUTDIR=TOPDIR2+'/'+'out'
-        ensure_dir(OUTPUTDIR)
-    
-    
-        # loop on molecular model resolution
-        #molecularresolution = np.array(['COARSE','MEDIUM','FINE']) 
-        # select only COARSE Model
-        molecularresolution = np.array(['COARSE'])    
-        for molres in molecularresolution:
-            if molres=='COARSE':
-                molresol ='coarse'
-            elif molres=='MEDIUM':
-                molresol ='medium'
-            else:
-                molresol ='fine'
-           
-        
-        #water vapor   
-        pwv_val=pwv_num
-        pwv_str='H2O '+str(pwv_val)+ ' MM'
-        wvfileindex=int(10*pwv_val)
-              
-        # airmass
-        airmass=airmass_num
-        amfileindex=int(airmass_num*10)
-        
-        # Ozone    
-        oz_str='O3 '+str(oz_num)+ ' DU'
-        ozfileindex=int(oz_num/10.)
-
-        #Cloud
-        cldindex = str(int(cloudext * 1000))     
-        cld_str=cldindex.zfill(4)
-        
-        # root path for filename    
-        BaseFilename=BaseFilename_part1+atmkey+'_'+Proc+'_'+Mod+'_z'+str(amfileindex)+'_'+WVXX+str(wvfileindex) +'_'+OZXX+str(ozfileindex) +"_"+CLD+cld_str
-                    
-        #verbose=True
-        verbose = FLAG_DEBUG
-
-        # premare to create libradtran input file
-
-        uvspec = UVspec3.UVspec()
-        #uvspec.inp["data_files_path"]  =  libradtranpath+'data'
-        uvspec.inp["data_files_path"]  =  libradtrandatapath
-                
-        #uvspec.inp["atmosphere_file"] = libradtranpath+'data/atmmod/'+atmosphere+'.dat'
-        uvspec.inp["atmosphere_file"] = libradtrandatapath+'/atmmod/'+atmosphere+'.dat'
-        # arbitrary earth albedo
-        uvspec.inp["albedo"]           = '0.2'
-    
-        uvspec.inp["rte_solver"] = rte_eq
-             
-        if Mod == 'rtvis':
-            uvspec.inp["mol_abs_param"] = molmodel + ' ' + molresol
+    # loop on molecular model resolution
+    #molecularresolution = np.array(['COARSE','MEDIUM','FINE'])
+    # select only COARSE Model
+    molecularresolution = np.array(['COARSE'])
+    for molres in molecularresolution:
+        if molres=='COARSE':
+            molresol ='coarse'
+        elif molres=='MEDIUM':
+            molresol ='medium'
         else:
-            uvspec.inp["mol_abs_param"] = molmodel
-
-        # Convert airmass into zenith angle (could be inproved)
-        am=airmass
-        sza=math.acos(1./am)*180./math.pi
-
-        # Should be no_absorption
-        if runtype=='aerosol_default':
-            uvspec.inp["aerosol_default"] = ''
-        elif runtype=='aerosol_special':
-            uvspec.inp["aerosol_default"] = ''
-            uvspec.inp["aerosol_set_tau_at_wvl"] = '500 0.02'
-                        
-        if runtype=='no_scattering':
-            uvspec.inp["no_scattering"] = ''
-        if runtype=='no_absorption':
-            uvspec.inp["no_absorption"] = ''
-     
-        # set up the ozone value               
-        uvspec.inp["mol_modify"] = pwv_str
-        uvspec.inp["mol_modify"] = oz_str
-        
-        # rescale pressure   if reasonable pressure values are provided
-        if press_num>200. and press_num<1080.:
-            uvspec.inp["pressure"] = press_num
-
-        uvspec.inp["ic_file"] = "1D ./IC.DAT"
-        uvspec.inp["ic_properties"] = "yang"
-        uvspec.inp["ic_modify"] = "tau set "+str(cloudext)
-
-        uvspec.inp["output_user"] = 'lambda edir'
-        uvspec.inp["altitude"] = OBS_Altitude   # Altitude  observatory
-        uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
-        #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_1.0nm.dat'
-        #uvspec.inp["source"] = 'solar '+libradtranpath+'data/solar_flux/kurudz_0.1nm.dat'
-        uvspec.inp["sza"]        = str(sza)
-        uvspec.inp["phi0"]       = '0'
-        uvspec.inp["wavelength"]       = '250.0 1200.0'
-        uvspec.inp["output_quantity"] = 'reflectivity' #'transmittance' #
-        if FLAG_VERBOSE:
-            uvspec.inp["verbose"] = ''
-        else:
-            uvspec.inp["quiet"] = ''
+            molresol ='fine'
 
 
-        if "output_quantity" in uvspec.inp.keys():
-            outtextfinal=outtext+'_'+uvspec.inp["output_quantity"]
+    #water vapor
+    pwv_val=pwv_num
+    pwv_str='H2O '+str(pwv_val)+ ' MM'
 
-           
-        inputFilename=BaseFilename+'.INP'
-        outputFilename=BaseFilename+'.OUT'
-        inp=os.path.join(INPUTDIR,inputFilename)
-        out=os.path.join(OUTPUTDIR,outputFilename)
-        
-        # provide a usefull file
-        fname = "IC.DAT"
-        if not os.path.isfile(fname):
-            with open(fname, 'w+') as f:
-                f.write('#      z     LWC    R_eff\n')
-                f.write('#     (km)  (g/m^3) (um) \n')
-                f.write('     11.000   0      0   \n')
-                f.write('     10.000   0.005  20  \n') 
-               
-        # really write libradtran input file    
-        uvspec.write_input(inp)
-        # run libradtran
-        uvspec.run(inp,out,verbose,path=libradtranpath)
-        
-    # return path of output file    
-    return OUTPUTDIR,outputFilename
+    # airmass
+    airmass=airmass_num
+
+    # Ozone
+    oz_str='O3 '+str(oz_num)+ ' DU'
+
+    verbose = FLAG_DEBUG
+
+    # premare to create libradtran input file
+
+    uvspec = UVspec3.UVspec()
+    uvspec.inp["data_files_path"]  =  libradtrandatapath
+
+    uvspec.inp["atmosphere_file"] = libradtrandatapath+'/atmmod/'+atmosphere+'.dat'
+    # arbitrary earth albedo
+    uvspec.inp["albedo"]           = '0.2'
+
+    uvspec.inp["rte_solver"] = rte_eq
+
+    if Mod == 'rtvis':
+        uvspec.inp["mol_abs_param"] = molmodel + ' ' + molresol
+    else:
+        uvspec.inp["mol_abs_param"] = molmodel
+
+    # Convert airmass into zenith angle (could be inproved)
+    sza=np.arccos(1. / airmass) * 180. / np.pi
+
+    # Should be no_absorption
+    if runtype=='aerosol_default':
+        uvspec.inp["aerosol_default"] = ''
+    elif runtype=='aerosol_special':
+        uvspec.inp["aerosol_default"] = ''
+        uvspec.inp["aerosol_set_tau_at_wvl"] = '500 0.02'
+
+    if runtype=='no_scattering':
+        uvspec.inp["no_scattering"] = ''
+    if runtype=='no_absorption':
+        uvspec.inp["no_absorption"] = ''
+
+    # set up the ozone value
+    uvspec.inp["mol_modify"] = pwv_str
+    uvspec.inp["mol_modify"] = oz_str
+
+    # rescale pressure   if reasonable pressure values are provided
+    if press_num>200. and press_num<1080.:
+        uvspec.inp["pressure"] = press_num
+
+    uvspec.inp["ic_file"] = "1D ./IC.DAT"
+    uvspec.inp["ic_properties"] = "yang"
+    uvspec.inp["ic_modify"] = "tau set "+str(cloudext)
+
+    uvspec.inp["output_user"] = 'lambda edir'
+    uvspec.inp["altitude"] = OBS_Altitude   # Altitude  observatory
+    uvspec.inp["source"] = 'solar '+libradtrandatapath+'/solar_flux/kurudz_1.0nm.dat'
+    uvspec.inp["sza"]        = str(sza)
+    uvspec.inp["phi0"]       = '0'
+    uvspec.inp["wavelength"]       = '250.0 1200.0'
+    uvspec.inp["output_quantity"] = 'reflectivity' #'transmittance' #
+    if FLAG_VERBOSE:
+        uvspec.inp["verbose"] = ''
+    else:
+        uvspec.inp["quiet"] = ''
+
+    # provide a usefull file
+    fname = "IC.DAT"
+    if not os.path.isfile(fname):
+        with open(fname, 'w+') as f:
+            f.write('#      z     LWC    R_eff\n')
+            f.write('#     (km)  (g/m^3) (um) \n')
+            f.write('     11.000   0      0   \n')
+            f.write('     10.000   0.005  20  \n')
+
+    # run libradtran
+    wl, atm = uvspec.run(verbose,path=libradtranpath)
+    # return wavelengths and transmissions
+    return wl, atm
 
 #---------------------------------------------------------------------------
 
@@ -529,7 +466,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
     :type cloudext: float, optional
 
     :param altitude_str: observation site predefined (either the site name abrebiation (LSST/CTIO,OMP,OMK,MSL) or the string on altitude like akm_2.663)
-    :type altitude: string
+    :type altitude_str: string
 
     :param FLAG_VERBOSE: flag to activate libradtran verbose mode that print all the table generated
     :type FLAG_VERBOSE: bool
@@ -813,7 +750,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
         # write libradtran input file    
         uvspec.write_input(inp)
         # execute libradtran
-        uvspec.run(inp,out,verbose,path=libradtranpath)
+        uvspec.run_with_files(inp,out,verbose,path=libradtranpath)
         
     # return path for libratran output file    
     return OUTPUTDIR,outputFilename
