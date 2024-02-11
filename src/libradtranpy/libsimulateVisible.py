@@ -7,7 +7,7 @@ library to simulate air transparency with LibRadTran
 :last update: October 22th 2023
 """
 
-
+import logging
 import os
 import re
 import math
@@ -28,13 +28,15 @@ if var not in os.environ:
     raise EnvironmentError(f"Failed because {var} is not set.")
 home = os.environ['HOME']+ '/'
 
-var = 'LIBRADTRANDIR'
-if var not in os.environ:
-    raise EnvironmentError(f"Failed because {var} is not set.")
-libradtranpath = os.getenv('LIBRADTRANDIR')+ '/'
+if os.getenv("CONDA_PREFIX") != "" and os.path.isdir(os.path.join(os.getenv("CONDA_PREFIX"), "share/libRadtran/data")):
+    libradtranpath = os.path.join(os.getenv("CONDA_PREFIX"), "share/libRadtran/")
+    libradtrandatapath = os.path.join(os.getenv("CONDA_PREFIX"), "share/libRadtran/data")
+elif os.getenv["LIBRADTRAN_DIR"]:
+    libradtranpath = os.getenv('LIBRADTRANDIR')+ '/'
+    libradtrandatapath = libradtranpath + "/share/libRadtran/data"
+else:
+    logging.warning(f"\n\tYou should set a LIBRADTRAN_DIR environment variable or install rubin-libradtran package.")
 
-
-libradtrandatapath = libradtranpath + "/share/libRadtran/data"
 #print("libradtranpath=",libradtranpath)
 
 # Filename : RT_LS_pp_us_sa_rt_z15_wv030_oz30.txt

@@ -1,9 +1,11 @@
-import os
+import os, sys, io
+import logging
+import shutil
 import scipy
 import numpy as np
 from scipy.optimize import leastsq
 home = os.environ['HOME']
-from subprocess import Popen,PIPE, STDOUT, call
+import subprocess
 
 class UVspec:
     def __init__(self,home=''):
@@ -35,10 +37,12 @@ class UVspec:
             print("Running uvspec with input file: ", inp)
             print("Output to file                : ", out)
             print("Path to exec                : ", path)
-        if path != '':
-            cmd = path+'bin/uvspec '+  ' < ' + inp  +  ' > ' + out
+        if shutil.which("uvspec"):
+            cmd = shutil.which("uvspec")
+        elif path != '':
+            cmd = os.path.join(path, 'bin/uvspec')
         else:
-            cmd = self.home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out
+            raise OSError(f"uvspec executable not found in $PATH or {os.path.join(path, 'bin/uvspec')}")
         if verbose:
             print("uvspec cmd: ", cmd)
 #        p   = call(cmd,shell=True,stdin=PIPE,stdout=PIPE)
@@ -195,7 +199,7 @@ def run(inp, out, verbose):
     #cmd ='('+ home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out +')>&'+log
     #print cmd
     #    p   = Popen(cmd,shell=True,stdin=PIPE,stdout=PIPE)
-    p   = call(cmd,shell=True,stdin=PIPE,stdout=PIPE)
+    p   = subprocess.call(cmd,shell=True,stdin=subprocess.PIPE,stdout=subprocess.PIPE)
 
 
 def mW2photons(wavelength,radiation):
