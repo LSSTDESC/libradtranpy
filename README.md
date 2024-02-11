@@ -10,16 +10,22 @@ The use of this interface is quite straight forwared provided the
 
 ### 1) Installation of libradtran
 
-The atmospheric simulation LibRadTran for multiple site (different altitudes) must be installed according the instruction given in 
-http://www.libradtran.org/doku.php
+The atmospheric simulation [libradtran](http://www.libradtran.org/doku.php) for multiple site (different altitudes) 
+There are two ways to install this software:
+- use the [Rubin observatory conda package](https://anaconda.org/conda-forge/rubin-libradtran)
+```
+conda install -c conda-forge rubin-libradtran
+```
+- from sources, with instructions given in http://www.libradtran.org/doku.php
 
-This documentation assumes libradtran version 2.0.5 is installed on your computer (version July 2023)
+This documentation assumes libradtran version `>=2.0.4` is installed on your computer.
 
 
 #### To use libradtran inside librandtranpy wrapper
 
-
-Environnement variable **LIBRADTRANDIR** must be set to ``libRadtran`` installation path under which one have each of these directories:
+If `libradtran` is installed from `conda-forge`, there is nothing to do.
+If it is installed from sources, then an environnement variable **LIBRADTRANDIR** must be set to ``libRadtran`` 
+installation path under which one have each of these directories:
 
 - /bin 
 - /share/libRadtran/data
