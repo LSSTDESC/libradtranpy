@@ -300,10 +300,11 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
 
 #   Selection of RTE equation solver        
     if Rte == 'pp': # parallel plan
-        rte_eq='disort'
+        rte_eq='twostr'  # 'disort'
     elif Rte=='ps':   # pseudo spherical
         rte_eq='sdisort'
-        
+    else:
+        raise ValueError(f'Unknown RTE equation solver {Rte=}.')
  
 #   Selection of absorption model 
     molmodel='reptran'
