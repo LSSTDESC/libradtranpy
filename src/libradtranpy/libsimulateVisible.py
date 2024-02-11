@@ -187,7 +187,7 @@ def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
     
 #-----------------------------------------------------------------------------
 
-def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_str='sa',cloudext=0.0, altitude_str ="LSST",FLAG_VERBOSE=False):
+def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,vaod,angstrom_exponent,prof_str='us',proc_str='as',cloudext=0.0, altitude_str ="LSST",FLAG_VERBOSE=False):
     """
     ProcessSimulation(airmass_num,pwv_num,oz_num) 
     Function to simulate air transparency.
@@ -207,13 +207,19 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     :param press_num: ground pressure 
     :type press_num: float in unit of in hPa or millibar
 
-    :param prof_str: defines the type of atmosphere, such standard us, 
+    :param vaod: vertical aerosol depth
+    :type vaod: float
+
+    :param angstrom_exponent: Angstrom exponent
+    :type angstrom_exponent: float
+
+    :param prof_str: defines the type of atmosphere, such standard us,
     mid latitude summer, mid latitude winter, tropical,.., default standard us 
     :type prof_str: optional string among us,ms,mw,tp,ss,sw
 
     :param proc_str: activation of different processes light-air interaction, 
     like scattering and absorption (sa), absorption only (ab), scattering only (sc),..,
-    default scattering and absorption (sa)
+    default scattering and absorption and aersols (as)
     :type proc_str: optional string among sa,ab,sc,ae,as
 
     :param cloudext: cloud optical depth, default 0
@@ -267,7 +273,9 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     #Proc='sa'  # Pure absorption and Rayleigh scattering : Clear sky without aerosols
     if proc_str in ["sa","ab","sc","ae","as"]:
         Proc=proc_str
-   
+    else:
+        raise ValueError(f'Unknown atmospheric profile {prof_str=}. Must be in ["sa","ab","sc","ae","as"].')
+
     # set the selected atmosphere
     if prof_str in ["us","ms","mw","tp","ss","sw"]:
         skyindex=prof_str
@@ -278,13 +286,8 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     TOPDIR = os.path.join(TOPTOPDIR,altitude_dir)
     ensure_dir(TOPDIR)
 
-    # build the part 1 of filename
-    BaseFilename_part1=Prog+'_'+Obs+'_'+Rte+'_'
+    # Set up type of
     
-    # Set up type of 
-    
-    runtype='clearsky' #'no_scattering' #aerosol_special #aerosol_default# #'clearsky'#   
-
     if Proc == 'sc':
         runtype='no_absorption'
     elif Proc == 'ab':
@@ -323,16 +326,19 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
 
     if re.search('us',skyindex):
         atmosphere = 'afglus'
-    if re.search('sw',skyindex):
+    elif re.search('sw',skyindex):
         atmosphere = 'afglsw'
-    if re.search('ss',skyindex):
+    elif re.search('ss',skyindex):
         atmosphere = 'afglss'
-    if re.search('mw',skyindex):
+    elif re.search('mw',skyindex):
         atmosphere = 'afglmw'
-    if re.search('ms',skyindex):
+    elif re.search('ms',skyindex):
         atmosphere = 'afglms'
-    if re.search('tp',skyindex):
+    elif re.search('tp',skyindex):
         atmosphere = 'afglt'
+    else:
+        raise ValueError(f'Unknown atmospheric profile {skyindex=}.')
+
       
     # loop on molecular model resolution
     #molecularresolution = np.array(['COARSE','MEDIUM','FINE'])
@@ -381,9 +387,14 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
     # Should be no_absorption
     if runtype=='aerosol_default':
         uvspec.inp["aerosol_default"] = ''
-    elif runtype=='aerosol_special':
+    elif runtype == 'aerosol_special':
         uvspec.inp["aerosol_default"] = ''
-        uvspec.inp["aerosol_set_tau_at_wvl"] = '500 0.02'
+        if angstrom_exponent is None or angstrom_exponent < 0:
+            uvspec.inp["aerosol_set_tau_at_wvl"] = f'500 {vaod:.20f}'
+        else:
+            # below formula recover default aerosols models with angstrom_exponent=1.2
+            tau = vaod * (0.5 ** angstrom_exponent)
+            uvspec.inp["aerosol_angstrom"] = f"{angstrom_exponent:.10f} {tau:.10f}"
 
     if runtype=='no_scattering':
         uvspec.inp["no_scattering"] = ''
