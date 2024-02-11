@@ -437,7 +437,7 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
      
         # set up the ozone value               
         uvspec.inp["mol_modify"] = pwv_str
-        uvspec.inp["mol_modify2"] = oz_str
+        uvspec.inp["mol_modify"] = oz_str
         
         # rescale pressure   if reasonable pressure values are provided
         if press_num>200. and press_num<1080.:
@@ -759,7 +759,7 @@ def ProcessSimulationaer(airmass_num,pwv_num,oz_num,aer_num,press_num,prof_str='
      
         # set up the ozone value               
         uvspec.inp["mol_modify"] = pwv_str
-        uvspec.inp["mol_modify2"] = oz_str
+        uvspec.inp["mol_modify"] = oz_str
         
         # rescale pressure   if reasonable pressure values are provided
         if press_num>200. and press_num<1080.:
