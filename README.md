@@ -178,26 +178,18 @@ from libradtranpy import libsimulateVisible
 A call without aerosols:
 
 ```python
-path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,pressure,
-                                                      prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str="LSST")
+wl,transm=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,pressure,aer_num=0,
+                                                      prof_str='us',proc_str='sa',cloudext=cloudext,altitude="LSST")
 ```
 
 A call with aerosols:
 
 ```python
-path,thefile = libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pressure,
-                                                      prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str="LSST")
+wl,transm = libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pressure,aer_num=aer,angstrom_exponent_num=exponent,
+                                                      prof_str='us',proc_str='sa',cloudext=cloudext,altitude="LSST")
 ```
 
-**path,thefilename** are the path and filename of the output ascii file.
-
-The result of the simulation can be obtained in a python environnement by:
-
-```python
-data = np.loadtxt(os.path.join(path,thefile))
-wl = data[:,0]
-atm = data[:,1]
-```                                                                 
+                                                  
 
 The library ``libsimulateThermal`` can be used similarly. Please refers
 to the ``libradtranpy`` package documentation.

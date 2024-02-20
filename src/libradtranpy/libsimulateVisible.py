@@ -4,7 +4,7 @@ library to simulate air transparency with LibRadTran
 
 :author: sylvielsstfr
 :creation date: November 2nd 2016
-:last update: October 22th 2023
+:last update: February 20th 2024
 """
 
 import os
