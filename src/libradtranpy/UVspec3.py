@@ -1,9 +1,11 @@
-import os
+import os, sys, io
+import logging
+import shutil
 import scipy
 import numpy as np
 from scipy.optimize import leastsq
 home = os.environ['HOME']
-from subprocess import Popen,PIPE, STDOUT, call
+import subprocess
 
 class UVspec:
     def __init__(self,home=''):
@@ -30,7 +32,29 @@ class UVspec:
         self.run(input,output,verbose)
         return
             
-    def run(self,inp, out, verbose,path=''):
+    def run(self, verbose, path=''):
+        if shutil.which("uvspec"):
+            cmd = shutil.which("uvspec")
+        elif path != '':
+            cmd = os.path.join(path, 'bin/uvspec')
+        else:
+            raise OSError(f"uvspec executable not found in $PATH or {os.path.join(path, 'bin/uvspec')}")
+        if verbose:
+            print("uvspec cmd: ", cmd)
+        inputstr = '\n'.join([f'{name} {self.inp[name]}' for name in self.inp.keys()])
+        try:
+            if verbose:
+                print("Running uvspec with input file:\n", inputstr)
+            process = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     input=inputstr, encoding='ascii')
+            return np.genfromtxt(io.StringIO(process.stdout)).T
+        except subprocess.CalledProcessError as e:  # pragma: nocover
+            logging.warning(f"\n\tLibradtran input command:\n{inputstr}")
+            logging.error(f"\n\t{e.stderr}")
+            sys.exit()
+
+    def run_with_files(self,inp, out, verbose,path=''):
         if verbose:
             print("Running uvspec with input file: ", inp)
             print("Output to file                : ", out)
@@ -195,7 +219,7 @@ def run(inp, out, verbose):
     #cmd ='('+ home+'/libRadtran/bin/uvspec '+  ' < ' + inp  +  ' > ' + out +')>&'+log
     #print cmd
     #    p   = Popen(cmd,shell=True,stdin=PIPE,stdout=PIPE)
-    p   = call(cmd,shell=True,stdin=PIPE,stdout=PIPE)
+    p   = subprocess.call(cmd,shell=True,stdin=subprocess.PIPE,stdout=subprocess.PIPE)
 
 
 def mW2photons(wavelength,radiation):

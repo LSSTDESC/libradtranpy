@@ -65,22 +65,19 @@ The call of libradtran through libradtranpy can be done as follow:
       
 * A call without aerosols:
 
-    path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,pressure,
-                prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str="LSST")
+    wl,transm=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,pressure,aer_num=0,
+                prof_str='us',proc_str='sa',cloudext=cloudext,altitude="LSST")
 
 * A call with aerosols:
 
-    path,thefile=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pressure,
-                prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str="LSST")
+    wl,transm=libsimulateVisible.ProcessSimulation(am[index],pwv,ozone,aer,pressure,aer_num,angstrom_exponent_num,
+                prof_str='us',proc_str='sa',cloudext=cloudext,altitude="LSST")
 
 
 * ``path,thefilename`` are the path and filename of the output ascii file.
 
-The result of the simulation can be obtained by:
-
-        data = np.loadtxt(os.path.join(path,thefile))
-        wl = data[:,0]
-        atm = data[:,1]                                                 
+The result of the simulation are the wavelngth array and the transmission array (same size)
+                                               
                                                       
                                                       
 
@@ -105,12 +102,10 @@ These are detailed in :doc:`apidocs`.
    >>> pwv =4.0  # set the precipitable water vapor in mm
    >>> oz=300. # set the ozone depth on DU
    >>> pressure = 0. # use default value
+   >>> aer=0.0 # vertical aerosol depth at reference wavelength 500 nm
    >>> cloudext=0 # use default
-   >>> path,thefile=libsimulateVisible.ProcessSimulation(am,pwv,ozone,pressure,
+   >>> wl,transm=libsimulateVisible.ProcessSimulation(am,pwv,ozone,pressure,aer_num=aer,
          prof_str='us',proc_str='sa',cloudext=cloudext,altitude_str='LSST',FLAG_VERBOSE=False)
-   >>> data = np.loadtxt(os.path.join(path,thefile))
-   >>> wl = data[:,0]   # wavelength array
-   >>> transm = data[:,1] # transmission array
-
+   
 Moreover the ``libradtranpy.libsimulateVisible`` API cannot appear on readthedocs website.
 This API may appear on user's computer if ``libRadtran`` is installed correctly. 
