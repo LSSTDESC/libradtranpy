@@ -25,7 +25,7 @@ if var not in os.environ:
     raise EnvironmentError(f"Failed because {var} is not set.")
 home = os.environ['HOME']+ '/'
 
-if os.getenv("LIBRADTRAN_DIR"):
+if os.getenv("LIBRADTRANDIR"):
     libradtranpath = os.getenv('LIBRADTRANDIR')+ '/'
     libradtrandatapath = libradtranpath + "/share/libRadtran/data"
 elif os.getenv("CONDA_PREFIX") != "" and os.path.isdir(os.path.join(os.getenv("CONDA_PREFIX"), "share/libRadtran/data")):
@@ -126,7 +126,7 @@ def ApplyAerosols(wl,tr,thelambda0,tau0,alpha0):
     return tr_tot
     
 
-def ProcessSimulation(airmass_num, pwv_num, oz_num, press_num, aer_num, angstrom_exponent_num=1.4,
+def ProcessSimulation(airmass_num, pwv_num, oz_num, press_num, aer_num=0, angstrom_exponent_num=1.4,
                       prof_str='us', proc_str='as', cloudext=0.0, altitude="LSST", aer_lambda0=500., FLAG_VERBOSE=False):
     """
     ProcessSimulation(airmass_num,pwv_num,oz_num) 
