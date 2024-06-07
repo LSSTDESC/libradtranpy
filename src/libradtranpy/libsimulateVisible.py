@@ -8,7 +8,6 @@ library to simulate air transparency with LibRadTran
 """
 
 import os
-import re
 import numpy as np
 from libradtranpy import UVspec3
 
@@ -43,15 +42,6 @@ else:
 # Filename : RT_LS_pp_us_sa_rt_z15_wv030_oz30.txt
 #          : Prog_Obs_Rte_Atm_proc_Mod_zXX_wv_XX_oz_XX
 
-Prog = "RT"  # definition the simulation programm is libRadTran
-Obs = "LS"  # definition of observatory site (LS,CT,OH,MK,...)
-Rte = "pp"  # pp for parallel plane of ps for pseudo-spherical
-Atm = ["us"]  # short name of atmospheric sky here US standard and  Subarctic winter
-Proc = (
-    "sa"  # light interaction processes : sc for pure scattering,ab for pure absorption
-)
-# sa for scattering and absorption, ae with aerosols default, as with aerosol special
-Mod = "rtvis"  # Models for absorption bands : rt for REPTRAN, lt for LOWTRAN, k2 for Kato2
 ZXX = "z"  # XX index for airmass z :   XX=int(10*z)
 WVXX = "wv"  # XX index for PWV       :   XX=int(pwv*10)
 OZXX = "oz"  # XX index for OZ        :   XX=int(oz/10)
@@ -104,6 +94,34 @@ def ensure_dir(f):
     """function to create a path"""
     if not os.path.exists(f):
         os.makedirs(f)
+        
+        
+def zenith_angle_from_airmass(A):
+    # Check if input is a float or an array
+    if isinstance(A, (int, float)):
+        A = np.array([A])  # Convert float to an array for consistent processing
+    elif isinstance(A, list):
+        A = np.array(A)  # Convert list to a NumPy array
+
+    # Calculate zenith angle based on conditions
+    result = np.empty_like(A, dtype=float)
+
+    # For A < 1.5
+    mask = A < 1.5
+    result[mask] = np.rad2deg(np.arccos(1.0 / A[mask]))
+
+    # For A >= 1.5
+    mask = A >= 1.5
+    term1 = 1
+    term2 = 10.0 / 6371.0
+    term3 = (A[mask]**2 / 2) * (10.0 / 6371.0)
+    cos_z = (term1 + term2 - term3) / A[mask]
+    result[mask] = np.rad2deg(np.arccos(cos_z))
+
+    # If input was originally a single float, return a single float
+    if result.size == 1:
+        return result[0]
+    return result
 
 
 #########################################################################
@@ -137,52 +155,57 @@ def ApplyAerosols(wl, tr, thelambda0, tau0, alpha0):
 
 
 def ProcessSimulation(
-    airmass_num,
-    pwv_num,
-    oz_num,
-    press_num,
-    aer_num=0,
-    angstrom_exponent_num=1.4,
-    prof_str="us",
-    proc_str="as",
+    model="reptran",
+    airmass=1.0,
+    pwv=0.0,
+    ozone=0.0,
+    pressure=1013,
+    atm_model="afglus",
+    rte="disort",
+    proc="clearsky",
     cloudext=0.0,
+    albedo=0,
     altitude="LSST",
-    aer_lambda0=500.0,
-    FLAG_VERBOSE=False,
+    lambda_min=300,
+    lambda_max=1200,
+    wl_res="coarse",
+    temperature=273.15,
+    pseudospherical=True,
+    FLAG_VERBOSE=False
 ):
     """
-    ProcessSimulation(airmass_num,pwv_num,oz_num)
+    ProcessSimulation(airmass,pwv,ozone)
     Function to simulate air transparency.
     No aerosol simulation is performed.
 
     Parameters:
 
-    :param airmass_num: airmass
-    :type airmass_num: float, unitless
+    :param airmass: airmass
+    :type airmass: float, unitless
 
-    :param pwv_num: precipitable water vapor
-    :type pwv_num: float, in units mm
+    :param pwv: precipitable water vapor
+    :type pwv: float, in units mm
 
-    :param oz_num: ozone colon depth
-    :type oz_num: float, in Dobson unit
+    :param ozone: ozone colon depth
+    :type ozone: float, in Dobson unit
 
-    :param press_num: ground pressure
-    :type press_num: float in unit of in hPa or millibar
+    :param pressure: ground pressure
+    :type pressure: float in unit of in hPa or millibar
 
-    :param aer_num: vertical aerosol depth
-    :type aer_num: float
+    :param aod: vertical aerosol depth
+    :type aod: float
 
-    :param angstrom_exponent_num: Angstrom exponent. If None or negative, default aerosol profile from libradtran is used (scaled by aer_num).
+    :param angstrom_exponent_num: Angstrom exponent. If None or negative, default aerosol profile from libradtran is used (scaled by aod).
     :type angstrom_exponent_num: float
 
-    :param prof_str: defines the type of atmosphere, such standard us,
+    :param atm_model: defines the type of atmosphere, such standard us,
     mid latitude summer, mid latitude winter, tropical,.., default standard us
-    :type prof_str: optional string among us,ms,mw,tp,ss,sw
+    :type atm_model: optional string among us,ms,mw,tp,ss,sw
 
-    :param proc_str: activation of different processes light-air interaction,
+    :param proc: activation of different processes light-air interaction,
     like scattering and absorption (sa), absorption only (ab), scattering only (sc),..,
     default scattering and absorption and aersols (as)
-    :type proc_str: optional string among sa,ab,sc,ae,as
+    :type proc: optional string among sa,ab,sc,ae,as
 
     :param cloudext: cloud optical depth, default 0
     :type cloudext: float, optional
@@ -197,20 +220,30 @@ def ProcessSimulation(
     :rtype: two arrays
     """
 
-    if FLAG_VERBOSE:
-        print("--------------- ProcessSimulation -----------------------------")
-        print(" 1) airmass = ", airmass_num)
-        print(" 2) pwv = ", pwv_num)
-        print(" 3) oz = ", oz_num)
-        print(" 4) aer_num  = ", aer_num)
-        print(" 5) angstrom_exp  = ", angstrom_exponent_num)
-        print(" 6) wl0  = ", aer_lambda0)
-        print(" 7) pressure  = ", press_num)
-        print(" 8) atmospheric profile = ", prof_str)
-        print(" 9) interaction processes = ", proc_str)
-        print(" 10) cloud extinction = ", cloudext)
-        print(" 11) site or altitude = ", altitude)
-        print("--------------------------------------------")
+    # if FLAG_VERBOSE:
+    #     print("--------------- ProcessSimulation -----------------------------")
+    #     print(" 1) airmass = ", airmass)
+    #     print(" 2) pwv = ", pwv)
+    #     print(" 3) oz = ", ozone)
+    #     print(" 4) aod  = ", aod)
+    #     print(" 5) angstrom_exp  = ", angstrom_exponent_num)
+    #     print(" 6) wl0  = ", aer_lambda0)
+    #     print(" 7) pressure  = ", pressure)
+    #     print(" 8) atmospheric profile = ", atm_model)
+    #     print(" 9) interaction processes = ", proc)
+    #     print(" 10) cloud extinction = ", cloudext)
+    #     print(" 11) site or altitude = ", altitude)
+    #     print("--------------------------------------------")
+    
+    
+    # premare to create libradtran input file
+    uvspec = UVspec3.UVspec()
+    uvspec.inp["data_files_path"] = os.path.join(
+        os.path.expanduser("~"), libradtrandatapath
+    )
+    uvspec.inp["atmosphere_file"] = os.path.join(
+        libradtrandatapath, "atmmod/" + atm_model + ".dat"
+    )
 
     # altitude workaround
     if isinstance(altitude, str):
@@ -226,162 +259,125 @@ def ProcessSimulation(
         )
 
     # set the interaction process
-    # Proc='sa'  # Pure absorption and Rayleigh scattering : Clear sky without aerosols
-    if proc_str in ["sa", "ab", "sc", "ae", "as"]:
-        Proc = proc_str
+    if proc in ["no_absorption", "no_scattering", "clearsky", "aerosol_default", "aerosol_special"]:
+        pass
     else:
         raise ValueError(
-            f'Unknown atmospheric profile {prof_str=}. Must be in ["sa","ab","sc","ae","as"].'
+            f'Unknown atmospheric process {atm_model=}. Must be in ["no_absorption", "no_scattering", "clearsky", "aerosol_default", "aerosol_special"].'
         )
 
     # set the selected atmosphere
-    if prof_str in [
-        "us",
-        "ms",
-        "mw",
-        "tp",
-        "ss",
-        "sw",
+    if atm_model in [
+        "afglus",
+        "afglms",
+        "afglmw",
+        "afgltp",
+        "afglss",
+        "afglsw",
         "ohp_winter",
         "ohp_spring",
         "ohp_summer",
         "ohp_autumn",
     ]:
-        skyindex = prof_str
+        pass
     else:
         raise ValueError(
-            f'Unknown atmospheric profile {prof_str=}. Must be in ["us","ms","mw","tp","ss","sw", "ohp_winter", "ohp_spring", "ohp_summer", "ohp_autumn"].'
+            f'Unknown atmospheric profile {atm_model}. Must be in ["us","ms","mw","tp","ss","sw", "ohp_winter", "ohp_spring", "ohp_summer", "ohp_autumn"].'
         )
 
-    # Set up type of
-    if Proc == "sc":
-        runtype = "no_absorption"
-    elif Proc == "ab":
-        runtype = "no_scattering"
-    elif Proc == "sa":
-        runtype = "clearsky"
-    elif Proc == "ae":
-        runtype = "aerosol_default"
-    elif Proc == "as":
-        runtype = "aerosol_special"
-    else:
-        runtype = "clearsky"
+    # # Set up type of
+    # if Proc == "sc":
+    #     runtype = "no_absorption"
+    # elif Proc == "ab":
+    #     runtype = "no_scattering"
+    # elif Proc == "sa":
+    #     runtype = "clearsky"
+    # elif Proc == "ae":
+    #     runtype = "aerosol_default"
+    # elif Proc == "as":
+    #     runtype = "aerosol_special"
+    # else:
+    #     runtype = "clearsky"
 
-    #   Selection of RTE equation solver
-    if Rte == "pp":  # parallel plan
-        rte_eq = "twostr"  # 'disort' is slower for equivalent results
-    elif Rte == "ps":  # pseudo spherical
-        rte_eq = "sdisort"
-    else:
-        raise ValueError(f"Unknown RTE equation solver {Rte=}.")
-
-    #   Selection of absorption model
-    molmodel = "reptran"
-    if Mod == "rt":
-        molmodel = "reptran"
-    if Mod == "lt":
-        molmodel = "lowtran"
-    if Mod == "kt":
-        molmodel = "kato"
-    if Mod == "k2":
-        molmodel = "kato2"
-    if Mod == "fu":
-        molmodel = "fu"
-    if Mod == "cr":
-        molmodel = "crs"
-
-    if re.search("us", skyindex):
-        atmosphere = "afglus"
-    elif re.search("sw", skyindex):
-        atmosphere = "afglsw"
-    elif re.search("ss", skyindex):
-        atmosphere = "afglss"
-    elif re.search("mw", skyindex):
-        atmosphere = "afglmw"
-    elif re.search("ms", skyindex):
-        atmosphere = "afglms"
-    elif re.search("tp", skyindex):
-        atmosphere = "afglt"
-    elif re.search("ohp_winter", skyindex):
-        atmosphere = "ohp_winter"
-    elif re.search("ohp_spring", skyindex):
-        atmosphere = "ohp_spring"
-    elif re.search("ohp_summer", skyindex):
-        atmosphere = "ohp_summer"
-    elif re.search("ohp_autumn", skyindex):
-        atmosphere = "ohp_autumn"
-    else:
-        raise ValueError(f"Unknown atmospheric profile {skyindex=}.")
-
-    # molecular molecular resolution: can be ['coarse','medium','fine']
-    # select only COARSE Model
-    molresol = "coarse"
-
-    # water vapor
-    pwv_str = "H2O " + str(pwv_num) + " MM"
-
-    # Ozone
-    oz_str = "O3 " + str(oz_num) + " DU"
-
-    # premare to create libradtran input file
-    uvspec = UVspec3.UVspec()
-    uvspec.inp["data_files_path"] = os.path.join(
-        os.path.expanduser("~"), libradtrandatapath
-    )
-    uvspec.inp["atmosphere_file"] = os.path.join(
-        libradtrandatapath, "atmmod/" + atmosphere + ".dat"
-    )
-    # arbitrary earth albedo
-    uvspec.inp["albedo"] = "0.2"
-
-    uvspec.inp["rte_solver"] = rte_eq
-
-    if Mod == "rtvis":
-        uvspec.inp["mol_abs_param"] = molmodel + " " + molresol
-    else:
-        uvspec.inp["mol_abs_param"] = molmodel
-
-    # Convert airmass into zenith angle (could be improved)
-    sza = np.arccos(1.0 / airmass_num) * 180.0 / np.pi
+    
+    # Albedo
+    uvspec.inp["albedo"] = str(albedo)
+    # Radiative transfer solver
+    uvspec.inp["rte_solver"] = rte
+    # Molecular resolution
+    uvspec.inp["mol_abs_param"] = model + " " + wl_res
+    # Surface temperature
+    uvspec.inp["sur_temperature"] = str(temperature)
+    
 
     # Should be no_absorption
-    if runtype == "aerosol_default":
+    if proc == "aerosol_default":
         uvspec.inp["aerosol_default"] = ""
-    elif runtype == "aerosol_special":
-        uvspec.inp["aerosol_default"] = ""
-        if angstrom_exponent_num is None or angstrom_exponent_num < 0:
-            uvspec.inp["aerosol_set_tau_at_wvl"] = f"500 {aer_num:.20f}"
-        else:
-            # below formula recover default aerosols models with angstrom_exponent_num=1.2
-            tau = aer_num * (0.5**angstrom_exponent_num)
-            uvspec.inp["aerosol_angstrom"] = f"{angstrom_exponent_num:.10f} {tau:.10f}"
-
-    if runtype == "no_scattering":
+    if proc == "no_scattering":
         uvspec.inp["no_scattering"] = ""
-    if runtype == "no_absorption":
+    if proc == "no_absorption":
         uvspec.inp["no_absorption"] = ""
 
-    # set up the ozone value
+    # PWV value
+    pwv_str = "H2O " + str(pwv) + " MM"
     uvspec.inp["mol_modify"] = pwv_str
-    uvspec.inp["mol_modify"] = oz_str  #### BUGUGUGUGUGUGUGUG
+    # Ozone value
+    oz_str = "O3 " + str(ozone) + " DU"
+    uvspec.inp["mol_modify"] = oz_str
 
     # rescale pressure if reasonable pressure values are provided
-    if press_num > 200.0 and press_num < 1080.0:
-        uvspec.inp["pressure"] = press_num
+    if pressure > 200.0 and pressure < 1080.0:
+        uvspec.inp["pressure"] = pressure
+    else:
+        print(f"ERROR, INPUT PRESSURE = {pressure} IS UNFEASIBLE")
 
-    uvspec.inp["ic_file"] = "1D ./IC.DAT"
-    uvspec.inp["ic_properties"] = "yang"
-    uvspec.inp["ic_modify"] = "tau set " + str(cloudext)
+    if cloudext > 0:
+        uvspec.inp["ic_file"] = "1D ./IC.DAT"
+        uvspec.inp["ic_properties"] = "yang"
+        uvspec.inp["ic_modify"] = "tau set " + str(cloudext)
 
-    uvspec.inp["output_user"] = "lambda edir"
+    # Configure desired output
+    if pseudospherical:
+        uvspec.inp["output_user"] = "lambda edir" + "\n" + "pseudospherical"
+    else:
+        uvspec.inp["output_user"] = "lambda edir"
+    
+    # Set up the altitude of the site
     uvspec.inp["altitude"] = str(altitude_num)  # altitude observatory
-    uvspec.inp["source"] = (
-        "solar " + libradtrandatapath + "/solar_flux/kurudz_1.0nm.dat"
-    )
-    uvspec.inp["sza"] = str(sza)
+    
+    
+
+    # Only for than X < 2,a fter that need to implement approximate code
+    # zenith_angle = np.rad2deg(np.arccos(1.0 / airmass))
+    zenith_angle = zenith_angle_from_airmass(airmass)
+    
+    print(zenith_angle)
+    uvspec.inp["sza"] = str(zenith_angle)
+    # looking downward = umu > 0
+    # looking upward = umu < 0
+    # The radiance is output at phi and umu.
+    # uvspec.inp["umu"] = (
+    #     str(-np.cos(np.deg2rad(zenith_angle)))
+    #     .replace("[", "")
+    #     .replace("]", "")
+    #     .replace("\n", "")
+    # )
+    # uvspec.inp["sza"] = (
+    #     str(zenith_angle)
+    #     .replace("[", "")
+    #     .replace("]", "")
+    #     .replace("\n", "")
+    # )
+    
+    
+    # print(uvspec.inp["umu"])
+    # uvspec.inp["source"] = "solar"
+    uvspec.inp["phi"] = "0"
     uvspec.inp["phi0"] = "0"
-    uvspec.inp["wavelength"] = "250.0 1200.0"
-    uvspec.inp["output_quantity"] = "reflectivity"  # 'transmittance'
+    uvspec.inp["wavelength"] = f"{lambda_min} {lambda_max}"
+    uvspec.inp["output_quantity"] = 'reflectivity'  #"reflectivity"
+    
+    
     if FLAG_VERBOSE:
         uvspec.inp["verbose"] = ""
     else:
@@ -523,15 +519,15 @@ if __name__ == "__main__":
         raise ValueError("bad cloud optical depth value : cld=", cld_nb)
 
     wl, atm = ProcessSimulation(
-        airmass_num=airmass_nb,
-        pwv_num=pwv_nb,
-        oz_num=oz_nb,
-        press_num=press_nb,
-        aer_num=vaod_nb,
+        airmass=airmass_nb,
+        pwv=pwv_nb,
+        ozone=oz_nb,
+        pressure=press_nb,
+        aod=vaod_nb,
         angstrom_exponent_num=exp_nb,
         aer_lambda0=wl0_nb,
-        prof_str=args.atmmodel,
-        proc_str=args.interactproc,
+        atm_model=args.atmmodel,
+        proc=args.interactproc,
         cloudext=cld_nb,
         altitude=args.altitudesite,
         FLAG_VERBOSE=FLAG_VERBOSE,

@@ -32,27 +32,67 @@ class UVspec:
         self.run(input,output,verbose)
         return
             
-    def run(self, verbose, path=''):
+    # def run(self, verbose, path=''):
+    #     if shutil.which("uvspec"):
+    #         cmd = shutil.which("uvspec")
+    #     elif path != '':
+    #         cmd = os.path.join(path, 'bin/uvspec')
+    #     else:
+    #         raise OSError(f"uvspec executable not found in $PATH or {os.path.join(path, 'bin/uvspec')}")
+    #     if verbose:
+    #         print("uvspec cmd: ", cmd)
+    #     inputstr = '\n'.join([f'{name} {self.inp[name]}' for name in self.inp.keys()])
+    #     try:
+    #         if verbose:
+    #             print("Running uvspec with input file:\n", inputstr)
+    #         process = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE,
+    #                                  stderr=subprocess.PIPE,
+    #                                  input=inputstr, encoding='ascii')
+    #         return np.genfromtxt(io.StringIO(process.stdout)).T
+    #     except subprocess.CalledProcessError as e:  # pragma: nocover
+    #         logging.warning(f"\n\tLibradtran input command:\n{inputstr}")
+    #         logging.error(f"\n\t{e.stderr}")
+    #         sys.exit()
+    def run(self, verbose, path=""):
+        """Run the Libradtran command uvspec.
+        Parameters
+        ----------
+        path: str, optional
+            Path to bin/uvspec if necessary, otherwise use $PATH (default: "")
+        Returns
+        -------
+        lambdas: array_like
+            Wavelength array.
+        atmosphere: array_like
+            Atmospheric array (transmission, emissivity, radiance).
+        """
         if shutil.which("uvspec"):
             cmd = shutil.which("uvspec")
-        elif path != '':
-            cmd = os.path.join(path, 'bin/uvspec')
+        elif path != "":
+            cmd = os.path.join(path, "bin/uvspec")
         else:
-            raise OSError(f"uvspec executable not found in $PATH or {os.path.join(path, 'bin/uvspec')}")
+            raise OSError(
+                f"uvspec executable not found in $PATH or {os.path.join(path, 'bin/uvspec')}"
+            )
+
+        inputstr = '\n'.join([f'{name} {self.inp[name]}' for name in self.inp.keys()])
         if verbose:
             print("uvspec cmd: ", cmd)
-        inputstr = '\n'.join([f'{name} {self.inp[name]}' for name in self.inp.keys()])
         try:
-            if verbose:
-                print("Running uvspec with input file:\n", inputstr)
-            process = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     input=inputstr, encoding='ascii')
+            process = subprocess.run(
+                cmd,
+                shell=True,
+                check=True,
+                capture_output=True,
+                input=inputstr,
+                encoding="ascii",
+            )
             return np.genfromtxt(io.StringIO(process.stdout)).T
         except subprocess.CalledProcessError as e:  # pragma: nocover
             logging.warning(f"\n\tLibradtran input command:\n{inputstr}")
             logging.error(f"\n\t{e.stderr}")
             sys.exit()
+    
 
     def run_with_files(self,inp, out, verbose,path=''):
         if verbose:
