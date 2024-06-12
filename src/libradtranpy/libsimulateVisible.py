@@ -161,7 +161,7 @@ def ProcessSimulation(
     ozone=0.0,
     pressure=1013,
     atm_model="afglus",
-    rte="disort",
+    rte="twostr",
     proc="clearsky",
     cloudext=0.0,
     albedo=0,
@@ -171,6 +171,7 @@ def ProcessSimulation(
     wl_res="coarse",
     temperature=273.15,
     pseudospherical=True,
+    output_quantity="reflectivity",
     FLAG_VERBOSE=False
 ):
     """
@@ -319,11 +320,9 @@ def ProcessSimulation(
         uvspec.inp["no_absorption"] = ""
 
     # PWV value
-    pwv_str = "H2O " + str(pwv) + " MM"
-    uvspec.inp["mol_modify"] = pwv_str
+    uvspec.inp["mol_modify H2O"] = f"{pwv:.20f} MM"
     # Ozone value
-    oz_str = "O3 " + str(ozone) + " DU"
-    uvspec.inp["mol_modify"] = oz_str
+    uvspec.inp["mol_modify O3"] = f"{ozone:.20f} DU"
 
     # rescale pressure if reasonable pressure values are provided
     if pressure > 200.0 and pressure < 1080.0:
@@ -351,7 +350,7 @@ def ProcessSimulation(
     # zenith_angle = np.rad2deg(np.arccos(1.0 / airmass))
     zenith_angle = zenith_angle_from_airmass(airmass)
     
-    print(zenith_angle)
+    # print(zenith_angle)
     uvspec.inp["sza"] = str(zenith_angle)
     # looking downward = umu > 0
     # looking upward = umu < 0
@@ -375,7 +374,7 @@ def ProcessSimulation(
     uvspec.inp["phi"] = "0"
     uvspec.inp["phi0"] = "0"
     uvspec.inp["wavelength"] = f"{lambda_min} {lambda_max}"
-    uvspec.inp["output_quantity"] = 'reflectivity'  #"reflectivity"
+    uvspec.inp["output_quantity"] = output_quantity
     
     
     if FLAG_VERBOSE:
