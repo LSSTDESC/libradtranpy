@@ -311,9 +311,11 @@ def ProcessSimulation(airmass_num, pwv_num, oz_num, press_num, aer_num, angstrom
     if runtype=='no_absorption':
         uvspec.inp["no_absorption"] = ''
 
-    # set up the ozone value
+    # set up the PWV and ozone value
+    # Notice we have mol_modify key twice in libradtran input file, both for PWV and OZ 
+    # But same key  in uvspec.inp dictionary would overwrite pwv    
     uvspec.inp["mol_modify"] = pwv_str
-    uvspec.inp["mol_modify"] = oz_str #### BUGUGUGUGUGUGUGUG
+    uvspec.inp["mol_modify2"] = oz_str #### BUGUGUGUGUGUGUGUG ==> No because overwrite pwv. UVspec3 manage the same tag for PWV and OZ
 
     # rescale pressure if reasonable pressure values are provided
     if press_num > 200. and press_num < 1080.:
