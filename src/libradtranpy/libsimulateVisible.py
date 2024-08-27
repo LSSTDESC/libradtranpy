@@ -4,7 +4,8 @@ library to simulate air transparency with LibRadTran
 
 :author: sylvielsstfr
 :creation date: November 2nd 2016
-:last update: February 20th 2024
+:update: February 20th 2024
+:last update : August 27th 2024 
 """
 
 import os
@@ -272,6 +273,8 @@ def ProcessSimulation(airmass_num, pwv_num, oz_num, press_num, aer_num, angstrom
 
     # water vapor
     pwv_str='H2O '+str(pwv_num)+ ' MM'
+    # try to solve the dictionnary with two identical keys
+    pwv_str2 = ' '+str(pwv_num)+ ' MM'
 
     # Ozone
     oz_str='O3 '+str(oz_num)+ ' DU'
@@ -311,9 +314,12 @@ def ProcessSimulation(airmass_num, pwv_num, oz_num, press_num, aer_num, angstrom
     if runtype=='no_absorption':
         uvspec.inp["no_absorption"] = ''
 
-    # set up the ozone value
-    uvspec.inp["mol_modify"] = pwv_str
-    uvspec.inp["mol_modify"] = oz_str #### BUGUGUGUGUGUGUGUG
+    # set up the PWV and ozone value
+    # Notice we have mol_modify key twice in libradtran input file, both for PWV and OZ 
+    # But same key  in uvspec.inp dictionary would overwrite pwv    
+    #uvspec.inp["mol_modify"] = pwv_str # OLD
+    uvspec.inp["mol_modify H2O"] = pwv_str2
+    uvspec.inp["mol_modify"] = oz_str #### BUGUGUGUGUGUGUGUG ==> No because overwrite pwv. UVspec3 manage the same tag for PWV and OZ
 
     # rescale pressure if reasonable pressure values are provided
     if press_num > 200. and press_num < 1080.:

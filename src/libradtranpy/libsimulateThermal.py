@@ -457,7 +457,9 @@ def ProcessSimulation(airmass_num,pwv_num,oz_num,press_num,prof_str='us',proc_st
         if runtype=='no_absorption':
             uvspec.inp["no_absorption"] = ''
      
-        # set up the ozone value               
+        # set up the ozone value  
+        # Notice we have mol_modify key twice in libradtran input file,  
+        # But same key  in uvspec.inp dictionary would overwrite pwv            
         uvspec.inp["mol_modify"] = pwv_str
         uvspec.inp["mol_modify2"] = oz_str
         
