@@ -441,10 +441,6 @@ if __name__ == "__main__":
         raise ValueError("bad cloud optical depth value : cld=", cld_nb)
 
 
-    #def ProcessSimulation(airmass_num, pwv_num, oz_num, press_num, aer_num, angstrom_exponent_num=1.4,
-    #                  prof_str='us', proc_str='as', cloudext=0.0, altitude="LSST", aer_lambda0=500., FLAG_VERBOSE=False):
-    #"""
-
     wl, atm = ProcessSimulation(airmass_num=airmass_nb, pwv_num=pwv_nb, oz_num=oz_nb, press_num=press_nb,
                                 aer_num=vaod_nb, angstrom_exponent_num=exp_nb, aer_lambda0=wl0_nb,
                                 prof_str=args.atmmodel, proc_str=args.interactproc,

@@ -9,8 +9,14 @@ ic_file 1D ./IC.DAT
 ic_properties yang
 ic_modify tau set 0.0
 output_user lambda edir
-# altitude 1.712 #ZTF
-altitude 2.635 #VLT
+#altitude 2.663 # Rubin-LSST
+#altitude 2.207 # Cerro Tololo Inter-American Observatory
+#altitude 0.65  # Observatoire de Haute Provence
+#altitude 1.712 # ZTF Palomar mount
+altitude 2.635 # VLT Paranal
+#altitude 2.8905 # Pic du Midi
+#altitude 4.205 # Mauna Kea
+#altitude 0.0 # Sea Level 
 source solar /Users/dagoret/MacOSX/External/libRadtran//share/libRadtran/data/solar_flux/kurudz_1.0nm.dat
 sza 0.0
 phi0 0
