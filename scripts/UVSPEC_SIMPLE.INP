@@ -1,0 +1,21 @@
+data_files_path /Users/dagoret/MacOSX/External/libRadtran//share/libRadtran/data
+atmosphere_file /Users/dagoret/MacOSX/External/libRadtran//share/libRadtran/data/atmmod/afglus.dat
+albedo 0.2
+rte_solver twostr
+mol_abs_param reptran coarse
+mol_modify H2O  5.0 MM
+mol_modify O3 300.0 DU
+ic_file 1D ./IC.DAT
+ic_properties yang
+ic_modify tau set 0.0
+output_user lambda edir
+# altitude 1.712 #ZTF
+altitude 2.635 #VLT
+source solar /Users/dagoret/MacOSX/External/libRadtran//share/libRadtran/data/solar_flux/kurudz_1.0nm.dat
+sza 0.0
+phi0 0
+#wavelength 250.0 1200.0
+wavelength 310.0 310.0   # Wavelength range [nm]
+output_quantity reflectivity
+verbose 
+#quiet

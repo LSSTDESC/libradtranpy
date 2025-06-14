@@ -5,7 +5,8 @@ library to simulate air transparency with LibRadTran
 :author: sylvielsstfr
 :creation date: November 2nd 2016
 :update: February 20th 2024
-:last update : August 27th 2024 
+:update : August 27th 2024 
+:last update : June 14th 2025 (work with libradtran 2.0.6) 
 """
 
 import os
@@ -13,7 +14,7 @@ import re
 import numpy as np
 from libradtranpy import UVspec3
 
-libradtranvers = "2.0.4"
+libradtranvers = "2.0.6"
 FLAG_DEBUG = False
 
 # Definitions and configuration
@@ -58,17 +59,21 @@ CLD="cld"
 # altitude has been reduced from 2.75 km to  2.663 km     
 
 # preselected sites 
-Dict_Of_sitesAltitudes = {'LSST':2.663,
-                          'CTIO':2.207,
-                          'OHP':0.65,
-                          'PDM':2.8905,
-                          'OMK':4.205,
-                          'OSL':0.000,
+Dict_Of_sitesAltitudes = {'LSST':2.663, # Rubin-LSST
+                          'CTIO':2.207, # Cerro Tololo Inter-American Observatory
+                          'OHP':0.65, # Observatoire de Haute Provence
+                          'ZTF': 1.712, # Palomar Observatory
+                          'VLT': 2.635, # Cerro Paranal (ESO)
+                          'PDM':2.8905, # Observatoire du Pic du Midi
+                          'OMK':4.205,  # Mauna Kea
+                          'OSL':0,      # Sea Level
                            }
 # pressure calculated by libradtran
 Dict_Of_sitesPressures = {'LSST':731.50433,
                           'CTIO':774.6052,
                           'OHP':937.22595,
+                          'ZTF':823.60004, # Palomar Observatory
+                          'VLT':734.08038, # Cerro Paranal (ESO)
                           'PDM':710.90637,
                           'OMK':600.17224,
                           'OSL':1013.000,
@@ -77,6 +82,8 @@ Dict_Of_sitesPressures = {'LSST':731.50433,
 Dict_Of_sitesTags = {'LSST':'LS',
                      'CTIO':'CT',
                      'OHP':'OH',
+                     'ZTF':'ZT',
+                     'VLT':'VL',
                      'PDM':'PM',
                      'OMK':'MK',
                      'OSL':'SL',
@@ -405,6 +412,18 @@ if __name__ == "__main__":
     cld_nb = float(args.cloud)
     wl0_nb = float(args.wl0)
 
+    if type(args.altitudesite) is str:
+        if args.altitudesite in Dict_Of_sitesAltitudes.keys():
+            altitude_nb = Dict_Of_sitesAltitudes[args.altitudesite]
+        else:
+            raise Exception(f"Bad site string {args.altitudesite}")
+    elif type(args.altitudesite) is float or type(args.altitudesite) is int:
+        altitude_nb = float(args.altitudesite)
+    else:
+        raise TypeError("altitude argument must be a string (observatory name) or a numerical value in km.")
+    
+
+
     # Check consistency of values
     if airmass_nb < 1 or airmass_nb > 3:
         raise ValueError("bad airmass value : z=", airmass_nb)
@@ -421,10 +440,15 @@ if __name__ == "__main__":
     if cld_nb < 0 or cld_nb > 100:
         raise ValueError("bad cloud optical depth value : cld=", cld_nb)
 
+
+    #def ProcessSimulation(airmass_num, pwv_num, oz_num, press_num, aer_num, angstrom_exponent_num=1.4,
+    #                  prof_str='us', proc_str='as', cloudext=0.0, altitude="LSST", aer_lambda0=500., FLAG_VERBOSE=False):
+    #"""
+
     wl, atm = ProcessSimulation(airmass_num=airmass_nb, pwv_num=pwv_nb, oz_num=oz_nb, press_num=press_nb,
                                 aer_num=vaod_nb, angstrom_exponent_num=exp_nb, aer_lambda0=wl0_nb,
                                 prof_str=args.atmmodel, proc_str=args.interactproc,
-                                cloudext=cld_nb, altitude=args.altitudesite, FLAG_VERBOSE=FLAG_VERBOSE)
+                                cloudext=cld_nb, altitude=altitude_nb, FLAG_VERBOSE=FLAG_VERBOSE)
 
     np.savetxt(args.filename, np.array([wl, atm]).T, delimiter=",")
 
